@@ -25,6 +25,10 @@ it("opens with cat README.md already executed", async () => {
   await controller.attach(write);
   expect(joinedWrites()).toContain("cat README.md");
   expect(joinedWrites()).toContain("ata");
+
+  const remount: string[] = [];
+  controller.setWrite((data) => remount.push(data));
+  expect(remount.join("")).toContain("cat README.md");
 });
 it("shares cwd and history between human and agent input", async () => {
   const { controller, joinedWrites, write } = createController();

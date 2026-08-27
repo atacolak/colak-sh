@@ -34,6 +34,7 @@ export class SessionController {
   private sessionMode: SessionMode = "idle";
   private write: ((data: string) => void) | null = null;
   private attached = false;
+  private screen = "";
 
   constructor(files: Record<string, string>) {
     this.shell = new BashShell({
@@ -60,15 +61,19 @@ export class SessionController {
 
   setWrite(write: (data: string) => void): void {
     this.write = write;
-    write(renderPrompt(this.cwd));
+    if (this.screen) write(this.screen);
   }
 
   async attach(write: (data: string) => void): Promise<void> {
     this.write = write;
-    if (this.attached) return;
+    if (this.attached) {
+      this.setWrite(write);
+      return;
+    }
     this.attached = true;
     await this.shell.attach((data: string) => {
       this.capture.push(data);
+      this.screen += data;
       this.write?.(data);
     });
     if (this.shell.bash) registerPortfolioCommands(this.shell.bash);
