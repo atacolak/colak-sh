@@ -14,7 +14,7 @@ import type { ServerMessage, TerminalResultMessage } from "../protocol/types.js"
 import { truncateForModel } from "../truncate.js";
 import { recentHistory, type HistoryTurn } from "./history.js";
 import { createPortfolioModel } from "./model.js";
-import { plainChatText } from "./plain-text.js";
+import { extractTypedCommand, plainChatText } from "./plain-text.js";
 import { SYSTEM_PROMPT } from "./prompt.js";
 import { filterSuggestions } from "./suggestions.js";
 
@@ -37,39 +37,41 @@ export async function runAgent(options: {
   let missingUsage = false;
   let spoken = "";
 
+  const runTerminal = async (command: string) => {
+    let allowed: string;
+    try {
+      allowed = assertAgentCommand(command);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "invalid command";
+      return {
+        command,
+        output: `${message}. one simple line: pwd cd ls cat head tail tree find grep rg wc stat. stay in /home/ata.`,
+        cwd: "/home/ata",
+      };
+    }
+    if (terminalCalls >= MAX_TERMINAL_CALLS) {
+      return {
+        command: allowed,
+        output: "terminal call budget exhausted",
+        cwd: "",
+      };
+    }
+    terminalCalls += 1;
+    const result = await options.exec(allowed);
+    return {
+      command: result.command,
+      output: truncateForModel(result.output),
+      cwd: result.cwd,
+    };
+  };
+
   const terminalExec = tool({
     description:
       "run a read-only command in the visitor's browser-local portfolio shell",
     inputSchema: z.object({
       command: z.string().min(1).max(500),
     }),
-    execute: async ({ command }) => {
-      let allowed: string;
-      try {
-        allowed = assertAgentCommand(command);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : "invalid command";
-        return {
-          command,
-          output: `${message}. one simple line: pwd cd ls cat head tail tree find grep rg wc stat. stay in /home/ata.`,
-          cwd: "/home/ata",
-        };
-      }
-      if (terminalCalls >= MAX_TERMINAL_CALLS) {
-        return {
-          command: allowed,
-          output: "terminal call budget exhausted",
-          cwd: "",
-        };
-      }
-      terminalCalls += 1;
-      const result = await options.exec(allowed);
-      return {
-        command: result.command,
-        output: truncateForModel(result.output),
-        cwd: result.cwd,
-      };
-    },
+    execute: async ({ command }) => runTerminal(command),
   });
 
   const controller = new AbortController();
@@ -95,15 +97,38 @@ export async function runAgent(options: {
       },
     });
 
+    let sawToolCall = false;
+    let pendingTyped: string | undefined;
     for await (const part of result.fullStream) {
+      if (part.type === "tool-call") sawToolCall = true;
       if (part.type === "text-delta" && part.text) {
+        spoken += part.text;
+        pendingTyped = extractTypedCommand(spoken) ?? pendingTyped;
         const text = plainChatText(part.text);
         if (!text) continue;
-        spoken += text;
         options.send({
           type: "assistant_delta",
           requestId: options.requestId,
           text,
+        });
+      }
+    }
+
+    if (!sawToolCall && pendingTyped) {
+      spoken = plainChatText(spoken);
+      const recovered = await runTerminal(pendingTyped);
+      const follow = await generateText({
+        model,
+        maxOutputTokens: MAX_OUTPUT_TOKENS_PER_MODEL_STEP,
+        prompt: `${SYSTEM_PROMPT}\n\nvisitor asked: ${options.prompt}\nyou ran: ${recovered.command}\noutput:\n${recovered.output}\nanswer now in one or two lowercase sentences. do not type commands.`,
+      });
+      const followText = plainChatText(follow.text);
+      if (followText) {
+        spoken += followText;
+        options.send({
+          type: "assistant_delta",
+          requestId: options.requestId,
+          text: followText,
         });
       }
     }

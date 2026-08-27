@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { breakSentences } from "./break-sentences";
 import { INITIAL_PROMPTS, type ChatMessage, type ChatState } from "./chat-state";
 import { PromptChips } from "./PromptChips";
 
@@ -58,6 +59,17 @@ function ChatLine({ message }: { message: ChatMessage }) {
         <span className="chat-tool-name">{message.name}</span>
         <code className="chat-tool-command">{message.command}</code>
       </div>
+    );
+  }
+  if (message.role === "assistant") {
+    return (
+      <p className="chat-assistant">
+        {breakSentences(message.text).map((sentence) => (
+          <span key={sentence} className="chat-sentence">
+            {sentence}
+          </span>
+        ))}
+      </p>
     );
   }
   return <p className={`chat-${message.role}`}>{message.text}</p>;

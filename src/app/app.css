@@ -1,11 +1,13 @@
+
+
 :root {
   color-scheme: dark;
-  --bg: #0b0d10;
+  --bg: #0b0f14;
   --panel: #11151a;
-  --fg: #d7dde5;
+  --fg: #e6e6e6;
   --muted: #8b96a5;
   --line: #232a33;
-  --accent: #7dcea0;
+  --accent: #9aff9a;
   font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
 }
 
@@ -32,12 +34,40 @@ body,
 .terminal-pane {
   min-width: 0;
   min-height: 0;
-  background: #000;
+  background:
+    linear-gradient(rgba(11, 15, 20, 0.28), rgba(11, 15, 20, 0.42)),
+    url("../assets/wallpaper.jpg") center / cover no-repeat;
 }
 
 .terminal-pane .wterm {
   height: 100%;
   width: 100%;
+  background: rgba(11, 15, 20, 0.28);
+  color: #e6e6e6;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 13px;
+  border-radius: 0;
+  box-shadow: none;
+  --term-fg: #e6e6e6;
+  --term-bg: transparent;
+  --term-cursor: #e6e6e6;
+  --term-font-family: "JetBrains Mono", ui-monospace, monospace;
+  --term-color-0: #0b0f14;
+  --term-color-1: #ff6b6b;
+  --term-color-2: #9aff9a;
+  --term-color-3: #d6ff8a;
+  --term-color-4: #9aff9a;
+  --term-color-5: #9aff9a;
+  --term-color-6: #6cff9c;
+  --term-color-7: #d0ffc0;
+  --term-color-8: #355a35;
+  --term-color-9: #7cff7c;
+  --term-color-10: #9aff9a;
+  --term-color-11: #d6ff8a;
+  --term-color-12: #9aff9a;
+  --term-color-13: #c0ffc0;
+  --term-color-14: #9affc0;
+  --term-color-15: #f0fff0;
 }
 
 .chat-panel {
@@ -96,9 +126,15 @@ body,
 }
 
 
+
 .chat-assistant {
   color: var(--fg);
 }
+
+.chat-sentence {
+  display: block;
+}
+
 
 .chat-tool {
   margin: 0 0 0.75rem;

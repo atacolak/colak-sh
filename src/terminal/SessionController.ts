@@ -1,6 +1,8 @@
 import { BashShell } from "@wterm/just-bash";
+import { wrapLineEditing } from "./line-edit";
 import { OutputCapture } from "./OutputCapture";
 import { normalizeTerminalCapture } from "./normalize-output";
+import { registerPortfolioCommands } from "./portfolio-commands";
 
 export type TerminalExecResult = {
   command: string;
@@ -68,6 +70,8 @@ export class SessionController {
       this.capture.push(data);
       this.write?.(data);
     });
+    if (this.shell.bash) registerPortfolioCommands(this.shell.bash);
+    wrapLineEditing(this.shell);
   }
 
   async handleHumanInput(data: string): Promise<void> {

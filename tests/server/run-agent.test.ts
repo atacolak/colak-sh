@@ -131,3 +131,41 @@ it("returns an error payload instead of throwing on a bad command", async () => 
   expect(exec).not.toHaveBeenCalled();
   expect(result.answer).toBe("that command is illegal here.");
 });
+
+it("recovers a typed shell command as a real terminal_exec", async () => {
+  streamText.mockImplementation(() => ({
+    fullStream: (async function* () {
+      yield {
+        type: "text-delta",
+        text: "i am listing the home directory. ls /home/ata",
+      };
+    })(),
+    text: Promise.resolve("i am listing the home directory. ls /home/ata"),
+    totalUsage: Promise.resolve({
+      inputTokens: 8,
+      outputTokens: 4,
+      totalTokens: 12,
+    }),
+  }));
+  generateText
+    .mockResolvedValueOnce({ text: "ata's public home. start in now." })
+    .mockResolvedValueOnce({ text: "[]" });
+  const exec = vi.fn(async (command: string) => ({
+    type: "terminal_result" as const,
+    callId: "c2",
+    command,
+    output: "README.md\nnow/\n",
+    cwd: "/home/ata",
+  }));
+  const sent: Array<{ type: string; text?: string }> = [];
+  const result = await runAgent({
+    prompt: "why should i talk to him?",
+    history: [],
+    exec,
+    send: (message) => sent.push(message),
+    requestId: "req-3",
+    config,
+  });
+  expect(exec).toHaveBeenCalledWith("ls /home/ata");
+  expect(result.answer).toContain("ata's public home. start in now.");
+});
