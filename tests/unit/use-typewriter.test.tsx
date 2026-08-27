@@ -11,15 +11,47 @@ it("reveals assistant text one character at a time", () => {
     { role: "visitor", text: "hi" },
     { role: "assistant", text: "ab" },
   ];
-  const { result } = renderHook(() => useTypewriter(messages, true));
-  expect((result.current.at(-1) as { text?: string } | undefined)?.text).toBe("");
+  const { result } = renderHook(() => useTypewriter(messages));
+  expect(result.current.at(-1)).toEqual({ role: "assistant", text: "" });
   act(() => {
     vi.advanceTimersByTime(16);
   });
-  expect((result.current.at(-1) as { text?: string } | undefined)?.text).toBe("a");
+  expect(result.current.at(-1)).toEqual({ role: "assistant", text: "a" });
   act(() => {
     vi.advanceTimersByTime(16);
   });
-  expect((result.current.at(-1) as { text?: string } | undefined)?.text).toBe("ab");
+  expect(result.current.at(-1)).toEqual({ role: "assistant", text: "ab" });
+  vi.useRealTimers();
+});
+
+it("typewrites mutters after a tool call", () => {
+  vi.useFakeTimers();
+  const first: ChatMessage[] = [
+    { role: "assistant", text: "hi" },
+    { role: "tool", name: "terminal_exec", command: "ls" },
+    { role: "assistant", text: "ok" },
+  ];
+  const { result, rerender } = renderHook(
+    ({ messages }: { messages: ChatMessage[] }) => useTypewriter(messages),
+    { initialProps: { messages: first } },
+  );
+  act(() => {
+    vi.advanceTimersByTime(16);
+  });
+  act(() => {
+    vi.advanceTimersByTime(16);
+  });
+  expect(result.current[0]).toEqual({ role: "assistant", text: "hi" });
+  rerender({
+    messages: [
+      { role: "assistant", text: "hi" },
+      { role: "tool", name: "terminal_exec", command: "ls" },
+      { role: "assistant", text: "xy" },
+    ],
+  });
+  act(() => {
+    vi.advanceTimersByTime(16);
+  });
+  expect(result.current[2]).toEqual({ role: "assistant", text: "x" });
   vi.useRealTimers();
 });

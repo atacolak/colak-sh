@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { breakSentences } from "./break-sentences";
 import { INITIAL_PROMPTS, type ChatMessage, type ChatState } from "./chat-state";
 import { PromptChips } from "./PromptChips";
@@ -12,7 +12,12 @@ type ChatPanelProps = {
 export function ChatPanel({ state, onPrompt }: ChatPanelProps) {
   const [draft, setDraft] = useState("");
   const chips = state.suggestions.length > 0 ? state.suggestions : INITIAL_PROMPTS;
-  const messages = useTypewriter(state.messages, state.active);
+  const messages = useTypewriter(state.messages);
+  const logRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    logRef.current?.scrollTo({ top: logRef.current.scrollHeight });
+  }, [messages]);
 
   function submit(text: string) {
     const trimmed = text.trim();
@@ -30,7 +35,7 @@ export function ChatPanel({ state, onPrompt }: ChatPanelProps) {
     <aside className="chat-panel">
       <h1 className="chat-title">ask ata's machine</h1>
       <PromptChips items={chips} disabled={state.active} onSelect={submit} />
-      <div className="chat-log" aria-live="polite">
+      <div className="chat-log" aria-live="polite" ref={logRef}>
         {messages.filter(visible).map((message, index) => (
           <ChatLine key={`${message.role}-${index}`} message={message} />
         ))}

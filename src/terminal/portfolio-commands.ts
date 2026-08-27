@@ -32,7 +32,7 @@ export const HELP_TEXT = [
 export function registerPortfolioCommands(bash: Bash): void {
   bash.registerCommand(lsCommand);
   bash.registerCommand(catCommand);
-  interceptHelp(bash);
+  interceptShell(bash);
 }
 
 export async function annotateLsForModel(
@@ -68,13 +68,21 @@ export async function annotateLsForModel(
   return `${output}\nfolders: ${folders.join(", ")}`;
 }
 
-function interceptHelp(bash: Bash): void {
+function interceptShell(bash: Bash): void {
   const original = bash.exec.bind(bash);
   bash.exec = (async (commandLine: string, options?) => {
     const trimmed = commandLine.replace(/^cd\s+"[^"]+"\s+&&\s+/, "").trim();
     if (trimmed === "help" || trimmed.startsWith("help ")) {
       return {
         stdout: HELP_TEXT,
+        stderr: "",
+        exitCode: 0,
+        env: bash.getEnv(),
+      };
+    }
+    if (trimmed === "clear") {
+      return {
+        stdout: "\x1b[3J\x1b[2J\x1b[H",
         stderr: "",
         exitCode: 0,
         env: bash.getEnv(),

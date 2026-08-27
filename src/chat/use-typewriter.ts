@@ -3,30 +3,37 @@ import type { ChatMessage } from "./chat-state";
 
 const CHAR_MS = 16;
 
-export function useTypewriter(messages: ChatMessage[], active: boolean): ChatMessage[] {
-  const latest = messages.at(-1);
-  const target =
-    latest?.role === "assistant" && active ? latest.text : null;
-  const [shown, setShown] = useState("");
+export function useTypewriter(messages: ChatMessage[]): ChatMessage[] {
+  const [shown, setShown] = useState<string[]>([]);
 
   useEffect(() => {
-    if (target == null) {
-      setShown("");
+    const next = messages.map((message, index) => {
+      if (message.role !== "assistant") return shown[index] ?? "";
+      const current = shown[index] ?? "";
+      return message.text.startsWith(current) ? current : "";
+    });
+
+    const pending = messages.findIndex((message, index) => {
+      return message.role === "assistant" && next[index] !== message.text;
+    });
+    if (pending < 0) {
+      if (next.length !== shown.length) setShown(next);
       return;
     }
-    if (shown === target) return;
-    if (!target.startsWith(shown)) {
-      setShown(target);
-      return;
-    }
+
+    const message = messages[pending];
+    if (message?.role !== "assistant") return;
+    const current = next[pending] ?? "";
     const timer = globalThis.setTimeout(() => {
-      setShown(target.slice(0, shown.length + 1));
+      const copy = [...next];
+      copy[pending] = message.text.slice(0, current.length + 1);
+      setShown(copy);
     }, CHAR_MS);
     return () => globalThis.clearTimeout(timer);
-  }, [shown, target]);
+  }, [messages, shown]);
 
-  if (target == null || shown === target) return messages;
-  const copy = [...messages];
-  copy[copy.length - 1] = { role: "assistant", text: shown };
-  return copy;
+  return messages.map((message, index) => {
+    if (message.role !== "assistant") return message;
+    return { role: "assistant", text: shown[index] ?? "" };
+  });
 }

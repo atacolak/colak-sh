@@ -4,6 +4,8 @@ export type LineEditor = {
   _line: string;
   _cursor: number;
   _write: ((data: string) => void) | null;
+  _prompt: (cwd: string) => string;
+  _cwd: string;
   handleInput: (data: string) => Promise<void>;
 };
 
@@ -12,6 +14,15 @@ export function wrapLineEditing(shell: BashShell): void {
   const original = editor.handleInput.bind(shell);
 
   editor.handleInput = async (data: string) => {
+    if (data === "\t") {
+      if (currentWord(editor._line).length === 0) return;
+      await original(data);
+      return;
+    }
+    if (data === "\x0c") {
+      clearScreen(editor);
+      return;
+    }
     if (data === "\x1b[3~" || data === "\x04") {
       forwardDelete(editor);
       return;
@@ -57,6 +68,20 @@ export function wrapLineEditing(shell: BashShell): void {
     }
     await original(data);
   };
+}
+
+export function currentWord(line: string): string {
+  return line.split(/\s+/).at(-1) ?? "";
+}
+
+export function clearScreen(editor: LineEditor): void {
+  if (!editor._write) return;
+  editor._write("\x1b[3J\x1b[2J\x1b[H");
+  editor._write(editor._prompt(editor._cwd));
+  editor._write(editor._line);
+  if (editor._cursor < editor._line.length) {
+    editor._write(`\x1b[${editor._line.length - editor._cursor}D`);
+  }
 }
 
 export function forwardDelete(editor: LineEditor): void {

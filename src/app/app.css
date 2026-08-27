@@ -74,7 +74,7 @@ body,
 
 .terminal-pane .wterm.has-scrollback {
   scrollbar-width: thin;
-  scrollbar-color: rgba(30, 136, 229, 0.35) transparent;
+  scrollbar-color: #5a5a5a transparent;
 }
 
 .terminal-pane .wterm.has-scrollback::-webkit-scrollbar {
@@ -86,7 +86,7 @@ body,
 }
 
 .terminal-pane .wterm.has-scrollback::-webkit-scrollbar-thumb {
-  background: rgba(30, 136, 229, 0.35);
+  background: #5a5a5a;
   border-radius: 999px;
 }
 
@@ -98,6 +98,8 @@ body,
   border-left: 1px solid var(--line);
   background: var(--panel);
   min-width: 0;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .chat-title {
@@ -135,10 +137,26 @@ body,
 
 .chat-log {
   flex: 1;
-  min-height: 4rem;
+  min-height: 0;
+  overflow-y: auto;
   color: var(--muted);
   font-size: 0.92rem;
   line-height: 1.4;
+  scrollbar-width: thin;
+  scrollbar-color: #5a5a5a transparent;
+}
+
+.chat-log::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-log::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-log::-webkit-scrollbar-thumb {
+  background: #5a5a5a;
+  border-radius: 999px;
 }
 
 .chat-log p {
@@ -161,6 +179,7 @@ body,
   color: var(--accent);
   font-family: "JetBrains Mono", ui-monospace, monospace;
   font-size: 0.82rem;
+  font-weight: 700;
 }
 
 .chat-form {
