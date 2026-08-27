@@ -2,7 +2,7 @@ import { BashShell } from "@wterm/just-bash";
 import { wrapLineEditing } from "./line-edit";
 import { OutputCapture } from "./OutputCapture";
 import { normalizeTerminalCapture } from "./normalize-output";
-import { registerPortfolioCommands } from "./portfolio-commands";
+import { annotateLsForModel, registerPortfolioCommands } from "./portfolio-commands";
 
 export type TerminalExecResult = {
   command: string;
@@ -17,7 +17,7 @@ const DEFAULT_CHAR_DELAY_MS = 8;
 
 export function renderPrompt(cwd: string): string {
   const display = cwd.replace(/^\/home\/ata/, "~") || "/";
-  return `\x1b[1;32mata@colak\x1b[0m:\x1b[1;34m${display}\x1b[0m$ `;
+  return `\x1b[1;34mata@colak\x1b[0m:\x1b[1;34m${display}\x1b[0m$ `;
 }
 
 function delay(ms: number): Promise<void> {
@@ -103,11 +103,13 @@ export class SessionController {
       await this.shell.handleInput("\r");
       const raw = this.capture.stop();
       const cwd = this.shell.cwd;
-      return {
+      const output = await annotateLsForModel(
         command,
-        output: normalizeTerminalCapture(raw, renderPrompt(cwd)),
+        normalizeTerminalCapture(raw, renderPrompt(cwd)),
         cwd,
-      };
+        this.shell.bash,
+      );
+      return { command, output, cwd };
     } finally {
       this.sessionMode = "idle";
     }

@@ -1,8 +1,11 @@
 import { MarkdownRenderer } from "@wterm/markdown";
 import { defineCommand, type Bash, type ResolvedCommandContext } from "just-bash";
 
+const DIR_COLOR = "\x1b[1;34m";
+const RESET = "\x1b[0m";
+
 const VISITOR_COMMANDS = [
-  ["ls", "list this directory. folders end with /"],
+  ["ls", "list this directory. folders are bold"],
   ["cd", "change directory"],
   ["pwd", "print working directory"],
   ["cat", "read a file. markdown is styled"],
@@ -32,6 +35,39 @@ export function registerPortfolioCommands(bash: Bash): void {
   interceptHelp(bash);
 }
 
+export async function annotateLsForModel(
+  command: string,
+  output: string,
+  cwd: string,
+  bash: Bash | null,
+): Promise<string> {
+  if (!bash || !/^\s*ls\b/.test(command)) return output;
+  const flags = command.replace(/^\s*ls\b/, "");
+  const targets = flags
+    .split(/\s+/)
+    .filter((part) => part && !part.startsWith("-"));
+  const path = bash.fs.resolvePath(cwd, targets[0] ?? ".");
+  let names: string[];
+  try {
+    names = await bash.fs.readdir(path);
+  } catch {
+    return output;
+  }
+  const folders: string[] = [];
+  for (const name of names) {
+    if (name.startsWith(".")) continue;
+    try {
+      if ((await bash.fs.stat(bash.fs.resolvePath(path, name))).isDirectory) {
+        folders.push(name);
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+  if (folders.length === 0) return output;
+  return `${output}\nfolders: ${folders.join(", ")}`;
+}
+
 function interceptHelp(bash: Bash): void {
   const original = bash.exec.bind(bash);
   bash.exec = (async (commandLine: string, options?) => {
@@ -49,7 +85,9 @@ function interceptHelp(bash: Bash): void {
 }
 
 const lsCommand = defineCommand("ls", async (args, ctx) => {
-  const showAll = args.includes("-a") || args.includes("-A");
+  const flags = args.filter((arg) => arg.startsWith("-")).join("").replaceAll("-", "");
+  const showAll = flags.includes("a") || flags.includes("A");
+  const onePerLine = flags.includes("1");
   const targets = args.filter((arg) => !arg.startsWith("-"));
   const paths = targets.length > 0 ? targets : ["."];
   const blocks: string[] = [];
@@ -70,8 +108,8 @@ const lsCommand = defineCommand("ls", async (args, ctx) => {
       blocks.push(target);
       continue;
     }
-    const names = await listNames(ctx, resolved, showAll);
-    blocks.push(names.join("  "));
+    const names = await listNames(ctx, resolved, showAll, onePerLine);
+    blocks.push(onePerLine ? names.join("\n") : names.join("  "));
   }
 
   return { stdout: `${blocks.join("\n")}\n`, stderr: "", exitCode: 0 };
@@ -105,11 +143,16 @@ async function listNames(
   ctx: ResolvedCommandContext,
   path: string,
   showAll: boolean,
+  plain: boolean,
 ): Promise<string[]> {
   const names = (await ctx.fs.readdir(path)).sort((a, b) => a.localeCompare(b));
   const visible = showAll ? names : names.filter((name) => !name.startsWith("."));
   const labeled: string[] = [];
   for (const name of visible) {
+    if (plain) {
+      labeled.push(name);
+      continue;
+    }
     const child = ctx.fs.resolvePath(path, name);
     let dir = false;
     try {
@@ -117,7 +160,7 @@ async function listNames(
     } catch {
       dir = false;
     }
-    labeled.push(dir ? `\x1b[1;34m${name}/\x1b[0m` : name);
+    labeled.push(dir ? `${DIR_COLOR}${name}${RESET}` : name);
   }
   return labeled;
 }

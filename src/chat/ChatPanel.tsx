@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { breakSentences } from "./break-sentences";
 import { INITIAL_PROMPTS, type ChatMessage, type ChatState } from "./chat-state";
 import { PromptChips } from "./PromptChips";
+import { useTypewriter } from "./use-typewriter";
 
 type ChatPanelProps = {
   state: ChatState;
@@ -11,6 +12,7 @@ type ChatPanelProps = {
 export function ChatPanel({ state, onPrompt }: ChatPanelProps) {
   const [draft, setDraft] = useState("");
   const chips = state.suggestions.length > 0 ? state.suggestions : INITIAL_PROMPTS;
+  const messages = useTypewriter(state.messages, state.active);
 
   function submit(text: string) {
     const trimmed = text.trim();
@@ -29,7 +31,7 @@ export function ChatPanel({ state, onPrompt }: ChatPanelProps) {
       <h1 className="chat-title">ask ata's machine</h1>
       <PromptChips items={chips} disabled={state.active} onSelect={submit} />
       <div className="chat-log" aria-live="polite">
-        {state.messages.filter(visible).map((message, index) => (
+        {messages.filter(visible).map((message, index) => (
           <ChatLine key={`${message.role}-${index}`} message={message} />
         ))}
       </div>
@@ -55,10 +57,9 @@ function visible(message: ChatMessage): boolean {
 function ChatLine({ message }: { message: ChatMessage }) {
   if (message.role === "tool") {
     return (
-      <div className="chat-tool" aria-label={`tool ${message.name}`}>
-        <span className="chat-tool-name">{message.name}</span>
-        <code className="chat-tool-command">{message.command}</code>
-      </div>
+      <p className="chat-tool" aria-label={`tool ${message.name}`}>
+        {message.command}
+      </p>
     );
   }
   if (message.role === "assistant") {

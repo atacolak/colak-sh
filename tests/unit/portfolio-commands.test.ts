@@ -1,8 +1,12 @@
 import { expect, it } from "vitest";
 import { Bash } from "just-bash";
-import { HELP_TEXT, registerPortfolioCommands } from "../../src/terminal/portfolio-commands";
+import {
+  annotateLsForModel,
+  HELP_TEXT,
+  registerPortfolioCommands,
+} from "../../src/terminal/portfolio-commands";
 
-it("marks directories with a trailing slash", async () => {
+it("bolds directories without a trailing slash", async () => {
   const bash = new Bash({
     files: {
       "/home/ata/README.md": "# ata\n",
@@ -12,9 +16,25 @@ it("marks directories with a trailing slash", async () => {
   });
   registerPortfolioCommands(bash);
   const result = await bash.exec("ls");
-  expect(result.stdout).toContain("now/");
+  expect(result.stdout).toContain("\x1b[1;34mnow\x1b[0m");
   expect(result.stdout).toContain("README.md");
-  expect(result.stdout).not.toMatch(/(^|\s)now(\s|$)/);
+  expect(result.stdout).not.toContain("now/");
+});
+
+it("lists one name per line for tab completion", async () => {
+  const bash = new Bash({
+    files: {
+      "/home/ata/README.md": "# ata\n",
+      "/home/ata/now/current.md": "# now\n",
+    },
+    cwd: "/home/ata",
+  });
+  registerPortfolioCommands(bash);
+  const result = await bash.exec('ls -1a "/home/ata"');
+  expect(result.stdout.split("\n")).toEqual(
+    expect.arrayContaining(["README.md", "now"]),
+  );
+  expect(result.stdout).not.toContain("\x1b");
 });
 
 it("prints a visitor-facing help list", async () => {
@@ -36,4 +56,22 @@ it("renders markdown through cat", async () => {
   const result = await bash.exec("cat README.md");
   expect(result.stdout).toMatch(/\x1b\[/);
   expect(result.stdout).toContain("ata");
+});
+
+it("annotates folders for the model without changing visitor ls", async () => {
+  const bash = new Bash({
+    files: {
+      "/home/ata/README.md": "# ata\n",
+      "/home/ata/now/current.md": "# now\n",
+    },
+    cwd: "/home/ata",
+  });
+  registerPortfolioCommands(bash);
+  const annotated = await annotateLsForModel(
+    "ls /home/ata",
+    "README.md  now",
+    "/home/ata",
+    bash,
+  );
+  expect(annotated).toContain("folders: now");
 });

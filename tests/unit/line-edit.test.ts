@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { deleteWord, forwardDelete } from "../../src/terminal/line-edit";
+import { deleteWord, forwardDelete, moveWord } from "../../src/terminal/line-edit";
 
 it("deletes the character in front of the cursor", () => {
   const writes: string[] = [];
@@ -26,4 +26,18 @@ it("deletes the previous word", () => {
   deleteWord(editor);
   expect(editor._line).toBe("ls ");
   expect(editor._cursor).toBe(3);
+});
+
+it("moves one word left and right", () => {
+  const writes: string[] = [];
+  const editor = {
+    _line: "ls /home/ata",
+    _cursor: 12,
+    _write: (data: string) => writes.push(data),
+    handleInput: async () => {},
+  };
+  moveWord(editor, -1);
+  expect(editor._cursor).toBe(3);
+  moveWord(editor, 1);
+  expect(editor._cursor).toBe(12);
 });
