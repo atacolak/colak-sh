@@ -128,6 +128,10 @@ const lsCommand = defineCommand("ls", async (args, ctx) => {
       blocks.push(target);
       continue;
     }
+    if (!onePerLine && isProjectsDir(resolved)) {
+      blocks.push(await listProjects(ctx, resolved));
+      continue;
+    }
     const names = await listNames(ctx, resolved, showAll, onePerLine);
     blocks.push(onePerLine ? names.join("\n") : names.join("  "));
   }
@@ -190,6 +194,52 @@ async function listNames(
     labeled.push(dir ? `${DIR_COLOR}${name}${RESET}` : name);
   }
   return labeled;
+}
+
+function isProjectsDir(path: string): boolean {
+  return path.replace(/\/+$/, "") === "/home/ata/projects";
+}
+
+async function listProjects(
+  ctx: ResolvedCommandContext,
+  path: string,
+): Promise<string> {
+  const names = (await ctx.fs.readdir(path))
+    .filter((name) => !name.startsWith("."))
+    .sort((a, b) => a.localeCompare(b));
+  const width = Math.max(12, ...names.map((name) => name.length));
+  const rows: string[] = [];
+  for (const name of names) {
+    const child = ctx.fs.resolvePath(path, name);
+    let dir = false;
+    try {
+      dir = (await ctx.fs.stat(child)).isDirectory;
+    } catch {
+      dir = false;
+    }
+    const label = dir ? `${DIR_COLOR}${name}${RESET}` : name;
+    const pad = " ".repeat(Math.max(1, width - name.length + 2));
+    const blurb = dir ? await projectBlurb(ctx, child) : "";
+    rows.push(blurb ? `${label}${pad}${blurb}` : label);
+  }
+  return rows.join("\n");
+}
+
+async function projectBlurb(
+  ctx: ResolvedCommandContext,
+  dir: string,
+): Promise<string> {
+  try {
+    const readme = await ctx.fs.readFile(ctx.fs.resolvePath(dir, "README.md"));
+    for (const line of readme.split("\n")) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#") || trimmed.startsWith("```")) continue;
+      return trimmed.replace(/\.$/, "");
+    }
+  } catch {
+    /* no readme */
+  }
+  return "";
 }
 
 function renderMarkdown(source: string): string {
