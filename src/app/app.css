@@ -125,13 +125,13 @@ body,
 .chat-socials {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: 0.95rem;
 }
 
 .chat-social {
   color: var(--muted);
   font-family: "Nerd Icons", sans-serif;
-  font-size: 1.05rem;
+  font-size: 1.35rem;
   line-height: 1;
   text-decoration: none;
 }
