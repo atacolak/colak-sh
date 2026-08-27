@@ -91,6 +91,13 @@ body,
   line-height: 1.4;
 }
 
+.chat-log p {
+  margin: 0 0 0.75rem;
+}
+
+.chat-assistant {
+  color: var(--fg);
+}
 .chat-form {
   margin-top: auto;
 }

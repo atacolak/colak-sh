@@ -11,6 +11,7 @@ test("renders a terminal-first portfolio and accepts shell input", async ({
   await expect(
     page.getByRole("button", { name: "what is ata working on lately?" }),
   ).toBeVisible();
+  await expect(terminal).toContainText("ata@colak", { timeout: 15_000 });
 
   await terminal.click();
   await page.keyboard.type("pwd");

@@ -4,7 +4,7 @@ import type {
   promptMessageSchema,
   serverMessageSchema,
   terminalResultMessageSchema,
-} from "./schema.ts";
+} from "./schema.js";
 
 export type ClientMessage = z.infer<typeof clientMessageSchema>;
 export type ServerMessage = z.infer<typeof serverMessageSchema>;

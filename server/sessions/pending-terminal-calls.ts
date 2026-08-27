@@ -1,7 +1,7 @@
 import type {
   ServerMessage,
   TerminalResultMessage,
-} from "../protocol/types.ts";
+} from "../protocol/types.js";
 
 const DEFAULT_TIMEOUT_MS = 15_000;
 

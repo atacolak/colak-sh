@@ -1,26 +1,31 @@
-import { useCallback, useRef } from "react";
+import { useCallback } from "react";
 import { Terminal, useTerminal } from "@wterm/react";
 import "@wterm/react/css";
 import { loadPortfolioFiles } from "../content/portfolio-files";
 import { SessionController } from "./SessionController";
 
-export function TerminalPane() {
+type TerminalPaneProps = {
+  onController: (controller: SessionController) => void;
+};
+
+let sharedController: SessionController | null = null;
+let sharedAttach: Promise<SessionController> | null = null;
+
+export function TerminalPane({ onController }: TerminalPaneProps) {
   const { ref, write, focus } = useTerminal();
-  const controllerRef = useRef<SessionController | null>(null);
-  const attachingRef = useRef(false);
 
   const handleReady = useCallback(() => {
-    if (controllerRef.current || attachingRef.current) return;
-    attachingRef.current = true;
-    const controller = new SessionController(loadPortfolioFiles());
-    controllerRef.current = controller;
-    void controller.attach((data) => {
-      write(data);
-    });
-  }, [write]);
+    if (!sharedController) {
+      sharedController = new SessionController(loadPortfolioFiles());
+      sharedAttach = sharedController.attach(write).then(() => sharedController!);
+    } else {
+      sharedController.setWrite(write);
+    }
+    void (sharedAttach ?? Promise.resolve(sharedController)).then(onController);
+  }, [onController, write]);
 
   const handleData = useCallback((data: string) => {
-    void controllerRef.current?.handleHumanInput(data);
+    void sharedController?.handleHumanInput(data);
   }, []);
 
   const handleClick = useCallback(() => {
