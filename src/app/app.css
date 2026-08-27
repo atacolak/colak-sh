@@ -51,6 +51,7 @@ body,
   color: #e6e6e6;
   font-family: "JetBrains Mono", ui-monospace, monospace;
   font-size: 16px;
+  font-weight: 500;
   --term-font-size: 16px;
   --term-line-height: 1.35;
   --term-row-height: 22px;
@@ -76,6 +77,12 @@ body,
   --term-color-13: #90caf9;
   --term-color-14: #64b5f6;
   --term-color-15: #ffffff;
+}
+
+.terminal-pane .wterm,
+.terminal-pane .wterm .term-row,
+.terminal-pane .wterm .term-row span {
+  font-weight: 500;
 }
 
 .terminal-pane .wterm.has-scrollback {
