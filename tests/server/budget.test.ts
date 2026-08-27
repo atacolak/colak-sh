@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { expect, it } from "vitest";
 import { UsageBudget } from "../../server/budget";
 import {
+  MAX_GLOBAL_CONCURRENT_MODEL_REQUESTS,
   MAX_GLOBAL_MODEL_TOKENS_PER_DAY,
   MAX_GLOBAL_PROMPTS_PER_DAY,
   MAX_MODEL_TOKENS_PER_IP_PER_DAY,
@@ -92,16 +93,15 @@ it("debits fallback tokens when usage is missing", async () => {
   );
 });
 
-it("caps concurrent model requests at 4", async () => {
+it("caps concurrent model requests", async () => {
   const now = { ms: Date.parse("2026-08-27T00:00:00Z") };
   const budget = await makeBudget(now);
-  expect(budget.admit("1.1.1.1").ok).toBe(true);
-  expect(budget.admit("1.1.1.2").ok).toBe(true);
-  expect(budget.admit("1.1.1.3").ok).toBe(true);
-  expect(budget.admit("1.1.1.4").ok).toBe(true);
-  expect(budget.admit("1.1.1.5")).toEqual({ ok: false, reason: "rate" });
+  for (let i = 0; i < MAX_GLOBAL_CONCURRENT_MODEL_REQUESTS; i++) {
+    expect(budget.admit(`1.1.1.${i}`).ok).toBe(true);
+  }
+  expect(budget.admit("9.9.9.9")).toEqual({ ok: false, reason: "rate" });
 });
 
 it("keeps the global daily prompt ceiling", () => {
-  expect(MAX_GLOBAL_PROMPTS_PER_DAY).toBe(300);
+  expect(MAX_GLOBAL_PROMPTS_PER_DAY).toBe(1500);
 });

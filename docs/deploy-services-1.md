@@ -15,7 +15,7 @@ local development:
 
 ```text
 LLM_BASE_URL=http://127.0.0.1:8317/v1
-LLM_MODEL=gemini-3.1-flash-lite
+LLM_MODEL=gemini-3.1-flash-lite(minimal)
 ```
 
 production on `services-1` cannot use sfub's loopback. use the existing private path:
@@ -26,7 +26,7 @@ LLM_BASE_URL=http://proxy.net.colak.sh/v1
 
 that hostname is netbird/split-horizon only. do not add a public cloudflare hostname for CPA. do not publish 8317.
 
-use a dedicated CPA client API key for colak.sh. put it in a root/service-readable env file on services-1, not in git, not in `VITE_*`.
+use a dedicated CPA client API key for colak.sh (`~/.config/colak-sh/env` locally). keep `ata2003` as the farm/management key; do not reuse it in the portfolio process.
 
 ## budgets
 

@@ -26,7 +26,7 @@ const config: AppConfig = {
   distDir: "dist",
   llmBaseUrl: "http://127.0.0.1:8317/v1",
   llmApiKey: "test",
-  llmModel: "gemini-3.1-flash-lite",
+  llmModel: "gemini-3.1-flash-lite(minimal)",
   budgetPath: "/tmp/budget.json",
   budgetSalt: "salt",
 };

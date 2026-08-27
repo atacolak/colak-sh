@@ -16,7 +16,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   const production = env.NODE_ENV === "production";
   const llmBaseUrl = env.LLM_BASE_URL ?? "http://127.0.0.1:8317/v1";
   const llmApiKey = env.LLM_API_KEY ?? "";
-  const llmModel = env.LLM_MODEL ?? "gemini-3.1-flash-lite";
+  const llmModel = env.LLM_MODEL ?? "gemini-3.1-flash-lite(minimal)";
   if (!fakeAgent && (!llmBaseUrl || !llmApiKey || !llmModel)) {
     throw new Error("LLM_BASE_URL, LLM_API_KEY, and LLM_MODEL are required");
   }
