@@ -8,7 +8,7 @@ export const promptMessageSchema = z
   .object({
     type: z.literal("prompt"),
     requestId,
-    text: z.string().min(1),
+    text: z.string().min(1).max(1200),
   })
   .strict();
 
@@ -17,7 +17,7 @@ export const terminalResultMessageSchema = z
     type: z.literal("terminal_result"),
     callId,
     command,
-    output: z.string(),
+    output: z.string().max(12_000),
     cwd: z.string().min(1),
   })
   .strict();

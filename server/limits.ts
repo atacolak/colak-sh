@@ -1,0 +1,25 @@
+export const MAX_PROMPT_CHARS = 1200;
+export const MAX_COMMAND_CHARS = 500;
+export const MAX_AGENT_STEPS = 6;
+export const MAX_TERMINAL_CALLS = 5;
+export const MAX_OUTPUT_TOKENS_PER_MODEL_STEP = 768;
+export const MAX_SUGGESTION_OUTPUT_TOKENS = 160;
+export const MAX_MODEL_VISIBLE_TOOL_OUTPUT_CHARS = 8000;
+export const MAX_TERMINAL_RESULT_CHARS = 12_000;
+export const MODEL_REQUEST_TIMEOUT_MS = 20_000;
+export const TERMINAL_RESULT_TIMEOUT_MS = 15_000;
+export const MAX_PROMPTS_PER_SESSION = 15;
+export const SESSION_IDLE_TTL_MS = 30 * 60_000;
+export const IP_RATE_WINDOW_MS = 10 * 60_000;
+export const MAX_PROMPTS_PER_IP_PER_WINDOW = 8;
+export const MAX_PROMPTS_PER_IP_PER_DAY = 30;
+export const MAX_MODEL_TOKENS_PER_IP_PER_DAY = 100_000;
+export const MAX_GLOBAL_CONCURRENT_MODEL_REQUESTS = 4;
+export const MAX_GLOBAL_PROMPTS_PER_DAY = 300;
+export const MAX_GLOBAL_MODEL_TOKENS_PER_DAY = 1_000_000;
+export const MISSING_USAGE_FALLBACK_TOKENS = 10_000;
+export const MAX_HISTORY_EXCHANGES = 4;
+export const MAX_HISTORY_CHARS = 6_000;
+export const MAX_WS_FRAME_BYTES = 16 * 1024;
+export const BUDGET_EXHAUSTED_MESSAGE =
+  "agent budget is exhausted for now — the terminal still works.";

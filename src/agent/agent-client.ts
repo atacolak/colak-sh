@@ -1,6 +1,7 @@
 import type { SessionController } from "../terminal/SessionController";
 import type { ChatState } from "../chat/chat-state";
 import type { ClientMessage, ServerMessage } from "../protocol/types";
+import { serverMessageSchema } from "../protocol/schema";
 
 export type AgentClientHandlers = {
   onState: (state: ChatState) => void;
@@ -10,7 +11,8 @@ export type AgentClientHandlers = {
 export class AgentClient {
   private socket: WebSocket | null = null;
   private requestActive = false;
-  private reconnecting = false;
+  private reconnectTimer: number | null = null;
+  private disposed = false;
   private outbound: ClientMessage[] = [];
   private state: ChatState = {
     messages: [],
@@ -26,7 +28,7 @@ export class AgentClient {
   }
 
   sendPrompt(text: string): void {
-    if (this.requestActive) return;
+    if (this.disposed || this.requestActive) return;
     const requestId = crypto.randomUUID();
     this.requestActive = true;
     this.setState({
@@ -41,7 +43,20 @@ export class AgentClient {
     this.send({ type: "prompt", requestId, text });
   }
 
+  close(): void {
+    this.disposed = true;
+    this.requestActive = false;
+    this.outbound = [];
+    if (this.reconnectTimer != null) {
+      window.clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+    this.socket?.close();
+    this.socket = null;
+  }
+
   private connect(): void {
+    if (this.disposed) return;
     const socket = new WebSocket(this.url);
     this.socket = socket;
     socket.addEventListener("open", () => {
@@ -49,7 +64,15 @@ export class AgentClient {
     });
     socket.addEventListener("message", (event) => {
       if (typeof event.data !== "string") return;
-      this.handleServerMessage(JSON.parse(event.data) as ServerMessage);
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(event.data);
+      } catch {
+        return;
+      }
+      const result = serverMessageSchema.safeParse(parsed);
+      if (!result.success) return;
+      this.handleServerMessage(result.data);
     });
     socket.addEventListener("close", () => {
       this.scheduleReconnect();
@@ -57,10 +80,11 @@ export class AgentClient {
   }
 
   private scheduleReconnect(): void {
-    if (this.requestActive || this.reconnecting) return;
-    this.reconnecting = true;
-    window.setTimeout(() => {
-      this.reconnecting = false;
+    if (this.disposed || this.requestActive || this.reconnectTimer != null) {
+      return;
+    }
+    this.reconnectTimer = window.setTimeout(() => {
+      this.reconnectTimer = null;
       this.connect();
     }, 1000);
   }

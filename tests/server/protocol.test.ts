@@ -65,6 +65,16 @@ it("rejects a command longer than 500 characters", () => {
   ).toThrow();
 });
 
+it("rejects a prompt longer than 1200 characters", () => {
+  expect(() =>
+    clientMessageSchema.parse({
+      type: "prompt",
+      requestId: "req-1",
+      text: "a".repeat(1201),
+    }),
+  ).toThrow();
+});
+
 it("rejects more than three suggestions", () => {
   expect(() =>
     serverMessageSchema.parse({

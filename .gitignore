@@ -9,3 +9,5 @@ playwright/.cache/
 .env.local
 *.log
 .DS_Store
+data/
+usage-budget.json

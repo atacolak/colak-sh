@@ -56,3 +56,9 @@ pinned versions from the implementation plan were kept:
 ## peer warning
 
 `@wterm/just-bash@0.3.4` declares `peerDependencies.just-bash: ^2`. the plan pins `just-bash@3.4.1`. installation succeeds with an unmet-peer warning. keep 3.4.1 unless a later task observes a real incompatibility in `BashShell` behavior.
+
+## browser `node:zlib` shim
+
+`just-bash@3.4.1` (and `3.4.2`) still statically import `gunzipSync` / `gzipSync` / `constants` from `node:zlib` in `dist/bundle/browser.js`. that breaks Vite production bundling because the browser build externalizes Node builtins. upstream: https://github.com/vercel-labs/just-bash/issues/81
+
+this portfolio does not need gzip/gunzip/zcat. `vite.config.ts` aliases `node:zlib` to `src/shims/node-zlib.ts`, which exports only those three symbols and throws a clear unavailable error. do not polyfill the rest of Node.

@@ -1,18 +1,40 @@
 import { randomUUID } from "node:crypto";
 import type { WebSocket } from "ws";
+import { runAgent } from "../agent/run-agent.js";
+import type { HistoryTurn } from "../agent/history.js";
+import { recentHistory } from "../agent/history.js";
+import type { AppConfig } from "../config.js";
+import type { UsageBudget } from "../budget.js";
 import { clientMessageSchema } from "../protocol/schema.js";
 import type { ClientMessage, ServerMessage } from "../protocol/types.js";
+import {
+  BUDGET_EXHAUSTED_MESSAGE,
+  MAX_PROMPT_CHARS,
+  MAX_PROMPTS_PER_SESSION,
+  MAX_WS_FRAME_BYTES,
+  SESSION_IDLE_TTL_MS,
+  TERMINAL_RESULT_TIMEOUT_MS,
+} from "../limits.js";
+import { truncateForModel } from "../truncate.js";
 import { PendingTerminalCalls } from "./pending-terminal-calls.js";
 
 const INITIAL_PROMPT = "what is ata working on lately?";
-const MAX_FRAME_BYTES = 16 * 1024;
 
 export class Session {
   readonly pendingTerminalCalls = new PendingTerminalCalls();
   private promptActive = false;
+  private prompts = 0;
+  private history: HistoryTurn[] = [];
+  private idleTimer: ReturnType<typeof setTimeout>;
 
-  constructor(private readonly socket: WebSocket) {
+  constructor(
+    private readonly socket: WebSocket,
+    private readonly ip: string,
+    private readonly config: AppConfig,
+    private readonly budget: UsageBudget,
+  ) {
     socket.binaryType = "arraybuffer";
+    this.idleTimer = setTimeout(() => this.socket.close(), SESSION_IDLE_TTL_MS);
   }
 
   send(message: ServerMessage): void {
@@ -20,13 +42,19 @@ export class Session {
     this.socket.send(JSON.stringify(message));
   }
 
+  touch(): void {
+    clearTimeout(this.idleTimer);
+    this.idleTimer = setTimeout(() => this.socket.close(), SESSION_IDLE_TTL_MS);
+  }
+
   async handleRawMessage(data: unknown, isBinary: boolean): Promise<void> {
+    this.touch();
     if (isBinary || typeof data !== "string") {
       this.send({ type: "error", message: "binary frames are not accepted" });
       this.socket.close();
       return;
     }
-    if (Buffer.byteLength(data) > MAX_FRAME_BYTES) {
+    if (Buffer.byteLength(data) > MAX_WS_FRAME_BYTES) {
       this.send({ type: "error", message: "message too large" });
       this.socket.close();
       return;
@@ -41,7 +69,10 @@ export class Session {
     }
 
     if (parsed.type === "terminal_result") {
-      this.pendingTerminalCalls.resolve(parsed);
+      this.pendingTerminalCalls.resolve({
+        ...parsed,
+        output: truncateForModel(parsed.output),
+      });
       return;
     }
 
@@ -49,7 +80,22 @@ export class Session {
   }
 
   dispose(): void {
+    clearTimeout(this.idleTimer);
     this.pendingTerminalCalls.rejectAll(new Error("socket closed"));
+  }
+
+  async execOnBrowser(
+    requestId: string,
+    command: string,
+  ) {
+    const callId = randomUUID();
+    return this.pendingTerminalCalls.request(
+      callId,
+      command,
+      (message: ServerMessage) => this.send(message),
+      TERMINAL_RESULT_TIMEOUT_MS,
+      requestId,
+    );
   }
 
   private async handlePrompt(requestId: string, text: string): Promise<void> {
@@ -61,20 +107,75 @@ export class Session {
       });
       return;
     }
-
-    this.promptActive = true;
-    try {
-      if (process.env.FAKE_AGENT === "1" && text === INITIAL_PROMPT) {
-        await this.runFakeAgent(requestId);
-        return;
-      }
+    if (text.length > MAX_PROMPT_CHARS) {
       this.send({
         type: "error",
         requestId,
-        message: "real model is not connected",
+        message: "prompt is too long",
       });
+      return;
+    }
+    if (this.prompts >= MAX_PROMPTS_PER_SESSION) {
+      this.send({
+        type: "error",
+        requestId,
+        message: BUDGET_EXHAUSTED_MESSAGE,
+      });
+      return;
+    }
+
+    const admitted = this.budget.admit(this.ip);
+    if (!admitted.ok) {
+      this.send({
+        type: "error",
+        requestId,
+        message: BUDGET_EXHAUSTED_MESSAGE,
+      });
+      return;
+    }
+
+    this.promptActive = true;
+    this.prompts += 1;
+    this.history.push({ role: "visitor", text });
+    try {
+      if (this.config.fakeAgent && text === INITIAL_PROMPT) {
+        await this.runFakeAgent(requestId);
+      } else if (this.config.fakeAgent) {
+        this.send({
+          type: "error",
+          requestId,
+          message: "real model is not connected",
+        });
+      } else {
+        const result = await runAgent({
+          prompt: text,
+          history: recentHistory(this.history.slice(0, -1)),
+          exec: (command) => this.execOnBrowser(requestId, command),
+          send: (message) => this.send(message),
+          requestId,
+          config: this.config,
+        });
+        this.budget.debit(this.ip, { totalTokens: result.tokens }, result.missingUsage);
+        if (result.missingUsage) {
+          console.warn(
+            JSON.stringify({
+              event: "missing_usage",
+              requestId,
+              fallbackTokens: result.tokens,
+            }),
+          );
+        }
+      }
+      this.send({ type: "done", requestId });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "prompt failed";
+      if (message !== "socket closed") {
+        this.send({ type: "error", requestId, message });
+      }
     } finally {
       this.promptActive = false;
+      this.budget.release();
+      this.history = recentHistory(this.history);
     }
   }
 
@@ -84,10 +185,8 @@ export class Session {
       requestId,
       text: "mostly agent infrastructure and speech systems. i'll show you.",
     });
-
-    await this.exec(requestId, "cd /home/ata/now");
-    await this.exec(requestId, "cat current.md");
-
+    await this.execOnBrowser(requestId, "cd /home/ata/now");
+    await this.execOnBrowser(requestId, "cat current.md");
     this.send({
       type: "suggestions",
       requestId,
@@ -97,17 +196,5 @@ export class Session {
         "show me something completely different",
       ],
     });
-    this.send({ type: "done", requestId });
-  }
-
-  private async exec(requestId: string, command: string): Promise<void> {
-    const callId = randomUUID();
-    await this.pendingTerminalCalls.request(
-      callId,
-      command,
-      (message: ServerMessage) => this.send(message),
-      15_000,
-      requestId,
-    );
   }
 }

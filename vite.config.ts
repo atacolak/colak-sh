@@ -3,7 +3,14 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: {
+      "node:zlib": new URL("./src/shims/node-zlib.ts", import.meta.url)
+        .pathname,
+    },
+  },
   server: {
+    allowedHosts: ["colak.sh"],
     proxy: {
       "/ws": {
         target: "ws://127.0.0.1:8790",

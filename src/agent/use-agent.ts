@@ -23,6 +23,10 @@ export function useAgent(getController: () => SessionController | null) {
       getController: () => getControllerRef.current(),
     });
     clientRef.current = client;
+    return () => {
+      client.close();
+      clientRef.current = null;
+    };
   }, []);
 
   return {

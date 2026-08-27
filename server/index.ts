@@ -1,9 +1,11 @@
+import { UsageBudget } from "./budget.js";
+import { loadConfig } from "./config.js";
 import { createApp } from "./app.js";
 
-const port = Number(process.env.PORT ?? 8787);
-const host = process.env.HOST ?? "127.0.0.1";
-const server = createApp();
+const config = loadConfig();
+const budget = await UsageBudget.load(config.budgetPath, config.budgetSalt);
+const server = createApp(config, budget);
 
-server.listen(port, host, () => {
-  console.log(`colak.sh listening on http://${host}:${port}`);
+server.listen(config.port, config.host, () => {
+  console.log(`colak.sh listening on http://${config.host}:${config.port}`);
 });
