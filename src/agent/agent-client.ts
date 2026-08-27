@@ -11,7 +11,7 @@ export type AgentClientHandlers = {
 export class AgentClient {
   private socket: WebSocket | null = null;
   private requestActive = false;
-  private reconnectTimer: number | null = null;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private disposed = false;
   private outbound: ClientMessage[] = [];
   private state: ChatState = {
@@ -48,7 +48,7 @@ export class AgentClient {
     this.requestActive = false;
     this.outbound = [];
     if (this.reconnectTimer != null) {
-      window.clearTimeout(this.reconnectTimer);
+      globalThis.clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
     }
     this.socket?.close();
@@ -75,15 +75,27 @@ export class AgentClient {
       this.handleServerMessage(result.data);
     });
     socket.addEventListener("close", () => {
+      if (this.requestActive) {
+        this.requestActive = false;
+        this.outbound = [];
+        this.setState({
+          ...this.state,
+          active: false,
+          messages: [
+            ...this.state.messages,
+            { role: "assistant", text: "connection dropped — try again" },
+          ],
+        });
+      }
       this.scheduleReconnect();
     });
   }
 
   private scheduleReconnect(): void {
-    if (this.disposed || this.requestActive || this.reconnectTimer != null) {
+    if (this.disposed || this.reconnectTimer != null) {
       return;
     }
-    this.reconnectTimer = window.setTimeout(() => {
+    this.reconnectTimer = globalThis.setTimeout(() => {
       this.reconnectTimer = null;
       this.connect();
     }, 1000);
@@ -161,7 +173,7 @@ export class AgentClient {
       const controller = this.handlers.getController();
       if (controller) return controller;
       const { promise, resolve } = Promise.withResolvers<void>();
-      window.setTimeout(resolve, 20);
+      globalThis.setTimeout(resolve, 20);
       await promise;
     }
     return this.handlers.getController();

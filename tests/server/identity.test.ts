@@ -14,4 +14,6 @@ it("allows production origin https://colak.sh", () => {
   expect(originAllowed("https://colak.sh", true)).toBe(true);
   expect(originAllowed("https://evil.example", true)).toBe(false);
   expect(originAllowed("http://127.0.0.1:5173", false)).toBe(true);
+  expect(originAllowed("https://colak.sh", false)).toBe(true);
+  expect(originAllowed("https://evil.example", false)).toBe(false);
 });

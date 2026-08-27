@@ -77,3 +77,23 @@ it("does not reconnect after close", async () => {
   expect(FakeSocket.instances).toHaveLength(1);
   vi.useRealTimers();
 });
+
+it("unsticks chips when the socket dies mid-prompt", async () => {
+  vi.useFakeTimers();
+  vi.stubGlobal("WebSocket", FakeSocket);
+  const states: Array<{ active: boolean; messages: Array<{ text: string }> }> = [];
+  const client = new AgentClient("ws://example/ws", {
+    onState: (state) => states.push(state),
+    getController: () => null,
+  });
+  await Promise.resolve();
+  client.sendPrompt("what is ata working on lately?");
+  expect(states.at(-1)?.active).toBe(true);
+  FakeSocket.instances[0]!.close();
+  expect(states.at(-1)?.active).toBe(false);
+  expect(states.at(-1)?.messages.at(-1)?.text).toMatch(/connection dropped/);
+  await vi.advanceTimersByTimeAsync(1000);
+  expect(FakeSocket.instances).toHaveLength(2);
+  client.close();
+  vi.useRealTimers();
+});
