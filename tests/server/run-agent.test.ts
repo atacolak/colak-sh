@@ -88,3 +88,46 @@ it("sends terminal_exec, continues, answers, then suggests", async () => {
   expect(result.missingUsage).toBe(false);
   expect(result.answer).toBe("peeking at now. speech-core is the live thread.");
 });
+
+it("returns an error payload instead of throwing on a bad command", async () => {
+  streamText.mockImplementation(
+    (opts: {
+      tools: {
+        terminal_exec: {
+          execute: (input: { command: string }) => Promise<unknown>;
+        };
+      };
+    }) => {
+      const toolResult = opts.tools.terminal_exec.execute({
+        command: "ls\necho nope",
+      });
+      return {
+        fullStream: (async function* () {
+          const result = await toolResult;
+          expect(result).toMatchObject({
+            output: expect.stringMatching(/cannot compose|invalid command/i),
+          });
+          yield { type: "text-delta", text: "that command is illegal here." };
+        })(),
+        text: Promise.resolve("that command is illegal here."),
+        totalUsage: Promise.resolve({
+          inputTokens: 4,
+          outputTokens: 2,
+          totalTokens: 6,
+        }),
+      };
+    },
+  );
+  generateText.mockResolvedValue({ text: "[]" });
+  const exec = vi.fn();
+  const result = await runAgent({
+    prompt: "look around",
+    history: [],
+    exec,
+    send: () => {},
+    requestId: "req-2",
+    config,
+  });
+  expect(exec).not.toHaveBeenCalled();
+  expect(result.answer).toBe("that command is illegal here.");
+});

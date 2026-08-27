@@ -44,7 +44,17 @@ export async function runAgent(options: {
       command: z.string().min(1).max(500),
     }),
     execute: async ({ command }) => {
-      const allowed = assertAgentCommand(command);
+      let allowed: string;
+      try {
+        allowed = assertAgentCommand(command);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "invalid command";
+        return {
+          command,
+          output: `${message}. one simple line: pwd cd ls cat head tail tree find grep rg wc stat. stay in /home/ata.`,
+          cwd: "/home/ata",
+        };
+      }
       if (terminalCalls >= MAX_TERMINAL_CALLS) {
         return {
           command: allowed,
@@ -77,20 +87,11 @@ export async function runAgent(options: {
       maxOutputTokens: MAX_OUTPUT_TOKENS_PER_MODEL_STEP,
       abortSignal: controller.signal,
       timeout: MODEL_REQUEST_TIMEOUT_MS,
-      prepareStep: ({ stepNumber, steps }) => {
+      prepareStep: ({ stepNumber }) => {
         if (stepNumber === 0) {
-          return {
-            system: `${SYSTEM_PROMPT}\n\nthis is the first glance. mutter one or two sentences about what you will open, then call terminal_exec. do not answer from memory.`,
-          };
+          return { toolChoice: "required" as const };
         }
-        const last = steps.at(-1);
-        const used = last?.toolCalls?.some((call) => call.toolName === "terminal_exec");
-        if (used) {
-          return {
-            system: `${SYSTEM_PROMPT}\n\na tool just returned. mutter what you found in one or two sentences. then either call terminal_exec again or stop. do not recap earlier answers. do not restate the visitor's previous questions.`,
-          };
-        }
-        return undefined;
+        return { toolChoice: "auto" as const };
       },
     });
 
