@@ -140,6 +140,10 @@ export class Session {
     try {
       if (this.config.fakeAgent && text === INITIAL_PROMPT) {
         await this.runFakeAgent(requestId);
+        this.history.push({
+          role: "assistant",
+          text: "mostly agent infrastructure and speech systems. i'll show you.",
+        });
       } else if (this.config.fakeAgent) {
         this.send({
           type: "error",
@@ -155,6 +159,9 @@ export class Session {
           requestId,
           config: this.config,
         });
+        if (result.answer.trim()) {
+          this.history.push({ role: "assistant", text: result.answer.trim() });
+        }
         this.budget.debit(this.ip, { totalTokens: result.tokens }, result.missingUsage);
         if (result.missingUsage) {
           console.warn(

@@ -42,9 +42,10 @@ it("sends terminal_exec, continues, answers, then suggests", async () => {
     }) => {
       const toolResult = opts.tools.terminal_exec.execute({ command: "ls" });
       return {
-        textStream: (async function* () {
+        fullStream: (async function* () {
+          yield { type: "text-delta", text: "peeking at now. " };
           await toolResult;
-          yield "speech-core is the live thread.";
+          yield { type: "text-delta", text: "speech-core is the live thread." };
         })(),
         text: Promise.resolve("speech-core is the live thread."),
         totalUsage: Promise.resolve({
@@ -59,7 +60,7 @@ it("sends terminal_exec, continues, answers, then suggests", async () => {
     text: JSON.stringify(["show me speech-core"]),
   });
 
-  const sent: Array<{ type: string }> = [];
+  const sent: Array<{ type: string; text?: string }> = [];
   const exec = vi.fn(async (command: string) => ({
     type: "terminal_result" as const,
     callId: "c1",
@@ -78,8 +79,12 @@ it("sends terminal_exec, continues, answers, then suggests", async () => {
   });
 
   expect(exec).toHaveBeenCalledWith("ls");
-  expect(sent.some((message) => message.type === "assistant_delta")).toBe(true);
+  expect(sent.filter((message) => message.type === "assistant_delta").map((m) => m.text)).toEqual([
+    "peeking at now. ",
+    "speech-core is the live thread.",
+  ]);
   expect(sent.some((message) => message.type === "suggestions")).toBe(true);
   expect(result.tokens).toBe(30);
   expect(result.missingUsage).toBe(false);
+  expect(result.answer).toBe("peeking at now. speech-core is the live thread.");
 });

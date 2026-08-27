@@ -95,9 +95,36 @@ body,
   margin: 0 0 0.75rem;
 }
 
+
 .chat-assistant {
   color: var(--fg);
 }
+
+.chat-tool {
+  margin: 0 0 0.75rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid #3a4d5c;
+  background: #0e1a22;
+  color: #8ec8e8;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.82rem;
+}
+
+.chat-tool-name {
+  display: block;
+  color: #5aa7c9;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+  margin-bottom: 0.2rem;
+}
+
+.chat-tool-command {
+  display: block;
+  color: #c8e7f5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .chat-form {
   margin-top: auto;
 }

@@ -32,11 +32,7 @@ export class AgentClient {
     const requestId = crypto.randomUUID();
     this.requestActive = true;
     this.setState({
-      messages: [
-        ...this.state.messages,
-        { role: "visitor", text },
-        { role: "assistant", text: "" },
-      ],
+      messages: [...this.state.messages, { role: "visitor", text }],
       suggestions: [],
       active: true,
     });
@@ -139,6 +135,17 @@ export class AgentClient {
     }
 
     if (message.type === "terminal_exec") {
+      this.setState({
+        ...this.state,
+        messages: [
+          ...this.state.messages,
+          {
+            role: "tool",
+            name: "terminal_exec",
+            command: message.command,
+          },
+        ],
+      });
       void this.runTerminal(message.callId, message.command);
       return;
     }

@@ -14,12 +14,14 @@ import type { ServerMessage, TerminalResultMessage } from "../protocol/types.js"
 import { truncateForModel } from "../truncate.js";
 import { recentHistory, type HistoryTurn } from "./history.js";
 import { createPortfolioModel } from "./model.js";
+import { plainChatText } from "./plain-text.js";
 import { SYSTEM_PROMPT } from "./prompt.js";
 import { filterSuggestions } from "./suggestions.js";
 
 export type AgentRunResult = {
   tokens: number;
   missingUsage: boolean;
+  answer: string;
 };
 
 export async function runAgent(options: {
@@ -33,6 +35,7 @@ export async function runAgent(options: {
   const model = createPortfolioModel(options.config);
   let terminalCalls = 0;
   let missingUsage = false;
+  let spoken = "";
 
   const terminalExec = tool({
     description:
@@ -74,14 +77,32 @@ export async function runAgent(options: {
       maxOutputTokens: MAX_OUTPUT_TOKENS_PER_MODEL_STEP,
       abortSignal: controller.signal,
       timeout: MODEL_REQUEST_TIMEOUT_MS,
+      prepareStep: ({ stepNumber, steps }) => {
+        if (stepNumber === 0) {
+          return {
+            system: `${SYSTEM_PROMPT}\n\nthis is the first glance. mutter one or two sentences about what you will open, then call terminal_exec. do not answer from memory.`,
+          };
+        }
+        const last = steps.at(-1);
+        const used = last?.toolCalls?.some((call) => call.toolName === "terminal_exec");
+        if (used) {
+          return {
+            system: `${SYSTEM_PROMPT}\n\na tool just returned. mutter what you found in one or two sentences. then either call terminal_exec again or stop. do not recap earlier answers. do not restate the visitor's previous questions.`,
+          };
+        }
+        return undefined;
+      },
     });
 
-    for await (const delta of result.textStream) {
-      if (delta) {
+    for await (const part of result.fullStream) {
+      if (part.type === "text-delta" && part.text) {
+        const text = plainChatText(part.text);
+        if (!text) continue;
+        spoken += text;
         options.send({
           type: "assistant_delta",
           requestId: options.requestId,
-          text: delta,
+          text,
         });
       }
     }
@@ -95,11 +116,8 @@ export async function runAgent(options: {
       missingUsage = true;
     }
 
-    const suggestions = await suggestNext(
-      model,
-      options.prompt,
-      await result.text,
-    );
+    const answer = plainChatText(spoken || (await result.text));
+    const suggestions = await suggestNext(model, options.prompt, answer);
     options.send({
       type: "suggestions",
       requestId: options.requestId,
@@ -108,6 +126,7 @@ export async function runAgent(options: {
     return {
       tokens: countedTokens(usage as UsageLike | undefined),
       missingUsage,
+      answer,
     };
   } finally {
     clearTimeout(timeout);
@@ -123,7 +142,7 @@ async function suggestNext(
     const result = await generateText({
       model,
       maxOutputTokens: MAX_SUGGESTION_OUTPUT_TOKENS,
-      prompt: `visitor asked: ${prompt}\nyou answered: ${answer}\nreturn JSON array of 0-3 specific next questions. no generic filler.`,
+      prompt: `visitor asked: ${prompt}\nyou answered: ${answer}\nreturn JSON array of 0-3 specific next questions. no generic filler. lowercase. no markdown.`,
     });
     return filterSuggestions(JSON.parse(result.text) as unknown);
   } catch {

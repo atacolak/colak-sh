@@ -47,7 +47,7 @@ afterEach(() => {
 
 it("ignores malformed server frames", async () => {
   vi.stubGlobal("WebSocket", FakeSocket);
-  const states: Array<{ messages: Array<{ text: string }> }> = [];
+  const states: Array<{ messages: Array<{ role: string }> }> = [];
   const client = new AgentClient("ws://example/ws", {
     onState: (state) => states.push(state),
     getController: () => null,
@@ -81,7 +81,10 @@ it("does not reconnect after close", async () => {
 it("unsticks chips when the socket dies mid-prompt", async () => {
   vi.useFakeTimers();
   vi.stubGlobal("WebSocket", FakeSocket);
-  const states: Array<{ active: boolean; messages: Array<{ text: string }> }> = [];
+  const states: Array<{
+    active: boolean;
+    messages: Array<{ role: string; text?: string }>;
+  }> = [];
   const client = new AgentClient("ws://example/ws", {
     onState: (state) => states.push(state),
     getController: () => null,
@@ -96,4 +99,57 @@ it("unsticks chips when the socket dies mid-prompt", async () => {
   expect(FakeSocket.instances).toHaveLength(2);
   client.close();
   vi.useRealTimers();
+});
+
+it("renders terminal_exec as a tool box between speech", async () => {
+  vi.stubGlobal("WebSocket", FakeSocket);
+  const states: Array<{
+    messages: Array<{ role: string; text?: string; command?: string }>;
+  }> = [];
+  const client = new AgentClient("ws://example/ws", {
+    onState: (state) => states.push(state),
+    getController: () => null,
+  });
+  await Promise.resolve();
+  client.sendPrompt("what is ata working on lately?");
+  const socket = FakeSocket.instances[0]!;
+  socket.emit(
+    "message",
+    JSON.stringify({
+      type: "assistant_delta",
+      requestId: "req-1",
+      text: "peeking at now.",
+    }),
+  );
+  socket.emit(
+    "message",
+    JSON.stringify({
+      type: "terminal_exec",
+      requestId: "req-1",
+      callId: "c1",
+      command: "ls /home/ata/now",
+    }),
+  );
+  socket.emit(
+    "message",
+    JSON.stringify({
+      type: "assistant_delta",
+      requestId: "req-1",
+      text: "two live threads.",
+    }),
+  );
+  const last = states.at(-1)?.messages ?? [];
+  expect(last.map((message) => message.role)).toEqual([
+    "visitor",
+    "assistant",
+    "tool",
+    "assistant",
+  ]);
+  expect(last[2]).toMatchObject({
+    role: "tool",
+    name: "terminal_exec",
+    command: "ls /home/ata/now",
+  });
+  expect(last[3]).toMatchObject({ role: "assistant", text: "two live threads." });
+  client.close();
 });
