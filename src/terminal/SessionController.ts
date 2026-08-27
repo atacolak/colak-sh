@@ -14,6 +14,7 @@ export type SessionMode = "idle" | "agent";
 
 const MAX_COMMAND_LENGTH = 500;
 const DEFAULT_CHAR_DELAY_MS = 8;
+const OPENING_COMMAND = "cat README.md";
 
 export function renderPrompt(cwd: string): string {
   const display = cwd.replace(/^\/home\/ata/, "~") || "/";
@@ -72,6 +73,10 @@ export class SessionController {
     });
     if (this.shell.bash) registerPortfolioCommands(this.shell.bash);
     wrapLineEditing(this.shell);
+    for (const ch of OPENING_COMMAND) {
+      await this.shell.handleInput(ch);
+    }
+    await this.shell.handleInput("\r");
   }
 
   async handleHumanInput(data: string): Promise<void> {
