@@ -73,5 +73,20 @@ it("annotates folders for the model without changing visitor ls", async () => {
     "/home/ata",
     bash,
   );
-  expect(annotated).toContain("folders: now");
+  expect(annotated).toContain("directories:");
+  expect(annotated).toContain("now/");
+  expect(annotated).toContain("files:");
+  expect(annotated).toContain("README.md");
+  expect(annotated).toContain("cat only files");
+});
+
+it("tells the visitor when cat hits a directory", async () => {
+  const bash = new Bash({
+    files: { "/home/ata/about/me.md": "hi\n" },
+    cwd: "/home/ata",
+  });
+  registerPortfolioCommands(bash);
+  const result = await bash.exec("cat about");
+  expect(result.exitCode).toBe(1);
+  expect(result.stderr).toContain("is a directory");
 });

@@ -49,23 +49,35 @@ export async function annotateLsForModel(
   const path = bash.fs.resolvePath(cwd, targets[0] ?? ".");
   let names: string[];
   try {
+    const stat = await bash.fs.stat(path);
+    if (stat.isFile) return `file ${targets[0] ?? path}`;
     names = await bash.fs.readdir(path);
   } catch {
     return output;
   }
-  const folders: string[] = [];
-  for (const name of names) {
+  const directories: string[] = [];
+  const files: string[] = [];
+  for (const name of names.sort((a, b) => a.localeCompare(b))) {
     if (name.startsWith(".")) continue;
     try {
       if ((await bash.fs.stat(bash.fs.resolvePath(path, name))).isDirectory) {
-        folders.push(name);
+        directories.push(`${name}/`);
+      } else {
+        files.push(name);
       }
     } catch {
-      /* ignore */
+      files.push(name);
     }
   }
-  if (folders.length === 0) return output;
-  return `${output}\nfolders: ${folders.join(", ")}`;
+  const lines = [
+    `listing ${path}`,
+    "directories:",
+    ...(directories.length > 0 ? directories.map((name) => `  ${name}`) : ["  (none)"]),
+    "files:",
+    ...(files.length > 0 ? files.map((name) => `  ${name}`) : ["  (none)"]),
+    "cat only files. ls a directory to see inside it.",
+  ];
+  return lines.join("\n");
 }
 
 function interceptShell(bash: Bash): void {
@@ -132,9 +144,17 @@ const catCommand = defineCommand("cat", async (args, ctx) => {
   const chunks: string[] = [];
   for (const file of files) {
     const resolved = ctx.fs.resolvePath(ctx.cwd, file);
-    let text: string;
     try {
-      text = await ctx.fs.readFile(resolved);
+      const stat = await ctx.fs.stat(resolved);
+      if (stat.isDirectory) {
+        return {
+          stdout: "",
+          stderr: `cat: ${file}: is a directory. ls it, then cat a file inside.\n`,
+          exitCode: 1,
+        };
+      }
+      const text = await ctx.fs.readFile(resolved);
+      chunks.push(file.endsWith(".md") ? renderMarkdown(text) : text);
     } catch {
       return {
         stdout: "",
@@ -142,7 +162,6 @@ const catCommand = defineCommand("cat", async (args, ctx) => {
         exitCode: 1,
       };
     }
-    chunks.push(file.endsWith(".md") ? renderMarkdown(text) : text);
   }
   return { stdout: chunks.join(""), stderr: "", exitCode: 0 };
 });

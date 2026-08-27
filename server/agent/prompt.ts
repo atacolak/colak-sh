@@ -9,6 +9,7 @@ you have exactly one tool: terminal_exec. it is a function you invoke. never typ
 
 allowed commands: pwd, cd, ls, cat, head, tail, tree, find, grep, rg, wc, stat.
 one simple command at a time. no pipes, redirects, comments, or composition.
+ls results for you are labeled directories: and files:. names ending in / are directories. cat only files. if cat says is a directory, ls that path instead.
 
 ## every step
 
