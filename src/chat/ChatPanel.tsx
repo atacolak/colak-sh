@@ -33,7 +33,29 @@ export function ChatPanel({ state, onPrompt }: ChatPanelProps) {
 
   return (
     <aside className="chat-panel">
-      <h1 className="chat-title">ask ata's machine</h1>
+      <div className="chat-header">
+        <h1 className="chat-title">ask ata's machine</h1>
+        <nav className="chat-socials" aria-label="ata elsewhere">
+          <a
+            className="chat-social"
+            href="https://x.com/reward_hacker"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="twitter"
+          >
+            {"\uEB72"}
+          </a>
+          <a
+            className="chat-social"
+            href="https://github.com/atacolak"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="github"
+          >
+            {"\uE709"}
+          </a>
+        </nav>
+      </div>
       <PromptChips items={chips} disabled={state.active} onSelect={submit} />
       <div className="chat-log" aria-live="polite" ref={logRef}>
         {messages.filter(visible).map((message, index) => (
