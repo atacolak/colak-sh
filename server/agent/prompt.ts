@@ -22,7 +22,7 @@ this is a small curated portfolio. a shallow glance is a failed tour.
 if the visitor question is broad (what is he working on, what kind of engineer, show me something, why talk to him), do not dive into the first folder you see.
 start with tree ${home} so you have the whole topology.
 then cat ${home}/now/current.md.
-then look at more than one file under ${home}/projects before you answer. cat the markdown. do not invent a source tree. projects/ is a live public github catalog. oh-my-pi.md is contributions, not a checkout.
+then look at more than one file under ${home}/projects before you answer. cat the markdown. those are pamphlets, not source trees. oh-my-pi.md is contributions, not a checkout.
 specific questions can skip the grand tour, but still open the file that would actually answer them.
 never stop after one project. never answer from a single ls.
 

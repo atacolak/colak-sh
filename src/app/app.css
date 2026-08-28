@@ -46,6 +46,32 @@ body,
   overflow: hidden;
 }
 
+.exhibit.has-stills {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(160px, 28%);
+}
+
+.exhibit-stills {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  padding: 1.1rem 1.1rem 1.1rem 0;
+  min-width: 0;
+}
+
+.exhibit-stills a {
+  display: block;
+}
+
+.exhibit-stills img {
+  width: 100%;
+  max-height: 34vh;
+  object-fit: contain;
+  border: 1px solid var(--line);
+  background: rgba(11, 15, 20, 0.55);
+}
+
 .terminal-pane {
   min-width: 0;
   min-height: 0;
@@ -109,24 +135,6 @@ body,
   text-decoration: underline;
   text-underline-offset: 0.16em;
   cursor: pointer;
-}
-
-.chat-stills {
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-}
-
-.chat-stills a {
-  display: block;
-}
-
-.chat-stills img {
-  width: 100%;
-  max-height: 22vh;
-  object-fit: contain;
-  border: 1px solid var(--line);
-  background: rgba(11, 15, 20, 0.72);
 }
 
 .chat-panel {
@@ -263,6 +271,16 @@ body,
   .exhibit,
   .terminal-pane {
     min-height: 52dvh;
+  }
+
+  .exhibit.has-stills {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(40dvh, 1fr) auto;
+  }
+
+  .exhibit-stills {
+    padding: 0 1.1rem 1.1rem;
+    max-height: none;
   }
 
   .chat-panel {

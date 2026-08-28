@@ -218,10 +218,9 @@ async function listProjects(
   const names = (await ctx.fs.readdir(path))
     .filter((name) => !name.startsWith("."))
     .sort((a, b) => a.localeCompare(b));
-  const display = names.map((name) => name.replace(/\.md$/, ""));
-  const width = Math.max(12, ...display.map((name) => name.length));
+  const width = Math.max(14, ...names.map((name) => name.length));
   const rows: string[] = [];
-  for (const [index, name] of names.entries()) {
+  for (const name of names) {
     const child = ctx.fs.resolvePath(path, name);
     let dir = false;
     try {
@@ -229,9 +228,8 @@ async function listProjects(
     } catch {
       dir = false;
     }
-    const shown = display[index] ?? name;
-    const label = dir ? `${DIR_COLOR}${shown}${RESET}` : shown;
-    const pad = " ".repeat(Math.max(1, width - shown.length + 2));
+    const label = dir ? `${DIR_COLOR}${name}${RESET}` : name;
+    const pad = " ".repeat(Math.max(4, width - name.length + 4));
     const blurb = dir
       ? await projectBlurb(ctx, child)
       : name.endsWith(".md")

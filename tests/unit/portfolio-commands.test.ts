@@ -107,10 +107,9 @@ it("lists projects as stacked one-liners", async () => {
   const result = await bash.exec("ls projects");
   const lines = result.stdout.trim().split("\n");
   expect(lines).toHaveLength(2);
-  expect(result.stdout).toContain("speech-core");
-  expect(result.stdout).not.toContain("speech-core.md");
+  expect(result.stdout).toContain("speech-core.md");
   expect(result.stdout).toContain("realtime speech substrate");
-  expect(result.stdout).toContain("browser-ops");
+  expect(result.stdout).toContain("browser-ops.md");
   expect(result.stdout).toContain("lease a cloak browser");
 });
 

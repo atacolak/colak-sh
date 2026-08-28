@@ -7,7 +7,7 @@ this is a curated public filesystem, not a live workstation. walk around:
 ```text
 about/      who i am and how i work
 now/        what i am building lately
-projects/   github catalog as markdown files
+projects/   pamphlets. origin links go to github
 contact/    how to reach me
 ```
 

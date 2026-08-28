@@ -13,11 +13,6 @@ export type Site = {
   openingCommand: string;
   socials: Array<{ label: string; href: string; icon: string }>;
   prompts: string[];
-  github: {
-    user: string;
-    exclude: string[];
-    contributions: Array<{ name: string; upstream: string; fork: string }>;
-  };
 };
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");

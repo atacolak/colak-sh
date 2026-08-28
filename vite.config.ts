@@ -18,7 +18,6 @@ export default defineConfig({
         ws: true,
       },
       "/healthz": "http://127.0.0.1:8790",
-      "/catalog": "http://127.0.0.1:8790",
     },
   },
 });

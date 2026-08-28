@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import type { PortfolioImage } from "../content/github-readme";
 import { site } from "../site";
 import { isStuckToBottom } from "../terminal/follow-scroll";
 import { breakSentences } from "./break-sentences";
@@ -15,10 +14,9 @@ const ICONS: Record<string, string> = {
 type ChatPanelProps = {
   state: ChatState;
   onPrompt: (text: string) => void;
-  images?: PortfolioImage[];
 };
 
-export function ChatPanel({ state, onPrompt, images = [] }: ChatPanelProps) {
+export function ChatPanel({ state, onPrompt }: ChatPanelProps) {
   const [draft, setDraft] = useState("");
   const chips = state.suggestions.length > 0 ? state.suggestions : INITIAL_PROMPTS;
   const messages = useTypewriter(state.messages);
@@ -62,20 +60,6 @@ export function ChatPanel({ state, onPrompt, images = [] }: ChatPanelProps) {
           ))}
         </nav>
       </div>
-      {images.length > 0 ? (
-        <aside className="chat-stills" aria-label="project stills">
-          {images.map((image) => (
-            <a
-              key={image.src}
-              href={image.src}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <img src={image.src} alt={image.alt || ""} />
-            </a>
-          ))}
-        </aside>
-      ) : null}
       <PromptChips items={chips} disabled={state.active} onSelect={submit} />
       <div
         className="chat-log"

@@ -1,22 +1,14 @@
-# oh-my-pi
-
-origin: https://github.com/atacolak/oh-my-pi
-upstream: https://github.com/can1357/oh-my-pi
 blurb: long-lived oh-my-pi fork. contributions, not a checkout
 
+# oh-my-pi
 
-open:
-- [#9969](https://github.com/can1357/oh-my-pi/pull/9969) fix(lsp): discover nested project roots lazily
-- [#9833](https://github.com/can1357/oh-my-pi/pull/9833) feat(collab): opt-in auto-start hosting and write-link file
-- [#9367](https://github.com/can1357/oh-my-pi/pull/9367) feat(hindsight): support append-mode session retention
-- [#9365](https://github.com/can1357/oh-my-pi/pull/9365) feat(hindsight): support per-retain extraction strategy
-- [#9363](https://github.com/can1357/oh-my-pi/pull/9363) fix(settings): respect project scope in /settings
+origin: [github.com/atacolak/oh-my-pi](https://github.com/atacolak/oh-my-pi)
+upstream: [can1357/oh-my-pi](https://github.com/can1357/oh-my-pi)
 
-merged:
-- [#9366](https://github.com/can1357/oh-my-pi/pull/9366) fix(hindsight): preserve conversation timestamps
-- [#9311](https://github.com/can1357/oh-my-pi/pull/9311) feat(coding-agent): overhaul the /extensions inspector
-- [#9180](https://github.com/can1357/oh-my-pi/pull/9180) fix(coding-agent): keep hidden custom tools out of parent sessions
-- [#8997](https://github.com/can1357/oh-my-pi/pull/8997) fix(ai): forward OMP system prompts on Cursor requestContext.rules
-- [#8984](https://github.com/can1357/oh-my-pi/pull/8984) fix(coding-agent): stop shared-role yaml order stealing retry fallback
-- [#8797](https://github.com/can1357/oh-my-pi/pull/8797) fix(tui): show subagent role and generate real HUD labels
-- [#8426](https://github.com/can1357/oh-my-pi/pull/8426) fix(theme): improve birch user/custom card contrast
+long-lived fork of [can1357/oh-my-pi](https://github.com/can1357/oh-my-pi). upstream `main` stays pristine. local work lives on isolated `cap/*` branches and composes into a daily `runtime`. this file is the contribution surface, not a checkout of the tree.
+
+open: [lsp nested roots](https://github.com/can1357/oh-my-pi/pull/9969), [collab autostart](https://github.com/can1357/oh-my-pi/pull/9833), [hindsight append](https://github.com/can1357/oh-my-pi/pull/9367), [retain strategy](https://github.com/can1357/oh-my-pi/pull/9365), [project-scoped settings](https://github.com/can1357/oh-my-pi/pull/9363).
+
+merged: conversation timestamps, the `/extensions` inspector, hidden custom tools, cursor requestContext rules, shared-role retry fallback, subagent hud labels, birch contrast.
+
+honest limit: the interesting claim is the topology, not a 512mb dump of someone else's agent in this shell.

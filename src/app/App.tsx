@@ -19,10 +19,24 @@ export function App() {
 
   return (
     <div className="app-shell">
-      <div className="exhibit">
+      <div className={`exhibit${images.length > 0 ? " has-stills" : ""}`}>
         <TerminalPane onController={handleController} />
+        {images.length > 0 ? (
+          <aside className="exhibit-stills" aria-label="project stills">
+            {images.map((image) => (
+              <a
+                key={image.src}
+                href={image.src}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <img src={image.src} alt={image.alt || ""} />
+              </a>
+            ))}
+          </aside>
+        ) : null}
       </div>
-      <ChatPanel state={state} onPrompt={sendPrompt} images={images} />
+      <ChatPanel state={state} onPrompt={sendPrompt} />
     </div>
   );
 }

@@ -7,7 +7,6 @@ import { MAX_WS_FRAME_BYTES } from "./limits.js";
 import { Session } from "./sessions/session.js";
 import { serveStatic } from "./static.js";
 import type { UsageBudget } from "./budget.js";
-import { getCatalog } from "./github-catalog.js";
 
 export function createApp(config: AppConfig, budget: UsageBudget) {
   const sessions = new WeakMap<WebSocket, Session>();
@@ -57,36 +56,6 @@ async function handleHttp(
       applySecurityHeaders({ "content-type": "application/json" }),
     );
     res.end(JSON.stringify({ ok: true }));
-    return;
-  }
-  if (req.url?.split("?")[0] === "/catalog") {
-    try {
-      const catalog = await getCatalog();
-      res.writeHead(
-        200,
-        applySecurityHeaders({
-          "content-type": "application/json; charset=utf-8",
-          "cache-control": "public, max-age=60",
-        }),
-      );
-      res.end(
-        JSON.stringify({
-          files: catalog.files,
-          items: catalog.items.map(({ name, path, blurb }) => ({
-            name,
-            path,
-            blurb,
-          })),
-        }),
-      );
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "catalog failed";
-      res.writeHead(
-        502,
-        applySecurityHeaders({ "content-type": "application/json" }),
-      );
-      res.end(JSON.stringify({ error: message }));
-    }
     return;
   }
   await serveStatic(req, res, config.distDir);

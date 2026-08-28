@@ -1,7 +1,6 @@
 import { useCallback, useRef, type MouseEvent } from "react";
 import { Terminal, useTerminal } from "@wterm/react";
 import "@wterm/react/css";
-import type { CatalogResponse } from "../content/github-catalog";
 import { loadPortfolioFiles } from "../content/portfolio-files";
 import { followWrite } from "./follow-scroll";
 import { SessionController } from "./SessionController";
@@ -25,18 +24,7 @@ export function TerminalPane({ onController }: TerminalPaneProps) {
     if (!controllerRef.current) {
       const controller = new SessionController(loadPortfolioFiles());
       controllerRef.current = controller;
-      attachRef.current = controller.attach(sink).then(async () => {
-        try {
-          const response = await fetch("/catalog");
-          if (response.ok) {
-            const catalog = (await response.json()) as CatalogResponse;
-            await controller.mergeFiles(catalog.files);
-          }
-        } catch {
-          /* snapshots stay */
-        }
-        return controller;
-      });
+      attachRef.current = controller.attach(sink).then(() => controller);
     } else {
       controllerRef.current.setWrite(sink);
     }
