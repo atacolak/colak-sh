@@ -14,11 +14,11 @@ it("reveals assistant text one character at a time", () => {
   const { result } = renderHook(() => useTypewriter(messages));
   expect(result.current.at(-1)).toEqual({ role: "assistant", text: "" });
   act(() => {
-    vi.advanceTimersByTime(16);
+    vi.advanceTimersByTime(9);
   });
   expect(result.current.at(-1)).toEqual({ role: "assistant", text: "a" });
   act(() => {
-    vi.advanceTimersByTime(16);
+    vi.advanceTimersByTime(9);
   });
   expect(result.current.at(-1)).toEqual({ role: "assistant", text: "ab" });
   vi.useRealTimers();
@@ -36,10 +36,10 @@ it("typewrites mutters after a tool call", () => {
     { initialProps: { messages: first } },
   );
   act(() => {
-    vi.advanceTimersByTime(16);
+    vi.advanceTimersByTime(9);
   });
   act(() => {
-    vi.advanceTimersByTime(16);
+    vi.advanceTimersByTime(9);
   });
   expect(result.current[0]).toEqual({ role: "assistant", text: "hi" });
   rerender({
@@ -50,7 +50,7 @@ it("typewrites mutters after a tool call", () => {
     ],
   });
   act(() => {
-    vi.advanceTimersByTime(16);
+    vi.advanceTimersByTime(9);
   });
   expect(result.current[2]).toEqual({ role: "assistant", text: "x" });
   vi.useRealTimers();

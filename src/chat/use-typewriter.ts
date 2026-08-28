@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { ChatMessage } from "./chat-state";
 
-const CHAR_MS = 16;
+const CHAR_MS = 9;
 
 export function useTypewriter(messages: ChatMessage[]): ChatMessage[] {
   const [shown, setShown] = useState<string[]>([]);
