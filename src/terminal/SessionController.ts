@@ -3,6 +3,7 @@ import { wrapLineEditing } from "./line-edit";
 import { OutputCapture } from "./OutputCapture";
 import { normalizeTerminalCapture } from "./normalize-output";
 import { annotateLsForModel, registerPortfolioCommands } from "./portfolio-commands";
+import { site } from "../site";
 
 export type TerminalExecResult = {
   command: string;
@@ -14,11 +15,11 @@ export type SessionMode = "idle" | "agent";
 
 const MAX_COMMAND_LENGTH = 500;
 const DEFAULT_CHAR_DELAY_MS = 8;
-const OPENING_COMMAND = "cat README.md";
 
 export function renderPrompt(cwd: string): string {
-  const display = cwd.replace(/^\/home\/ata/, "~") || "/";
-  return `\x1b[1;34mata@colak\x1b[0m:\x1b[1;34m${display}\x1b[0m$ `;
+  const home = site.home.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const display = cwd.replace(new RegExp(`^${home}`), "~") || "/";
+  return `\x1b[1;34m${site.user}@${site.promptHost}\x1b[0m:\x1b[1;34m${display}\x1b[0m$ `;
 }
 
 function delay(ms: number): Promise<void> {
@@ -39,10 +40,10 @@ export class SessionController {
   constructor(files: Record<string, string>) {
     this.shell = new BashShell({
       files,
-      cwd: "/home/ata",
+      cwd: site.home,
       env: {
-        HOME: "/home/ata",
-        USER: "ata",
+        HOME: site.home,
+        USER: site.user,
         SHELL: "/bin/bash",
         TERM: "xterm-256color",
       },
@@ -78,7 +79,7 @@ export class SessionController {
     });
     if (this.shell.bash) registerPortfolioCommands(this.shell.bash);
     wrapLineEditing(this.shell);
-    for (const ch of OPENING_COMMAND) {
+    for (const ch of site.openingCommand) {
       await this.shell.handleInput(ch);
     }
     await this.shell.handleInput("\r");

@@ -1,5 +1,6 @@
 import { expect, it } from "vitest";
 import { Bash } from "just-bash";
+import { site } from "../../src/site";
 import {
   annotateLsForModel,
   HELP_TEXT,
@@ -9,10 +10,10 @@ import {
 it("bolds directories without a trailing slash", async () => {
   const bash = new Bash({
     files: {
-      "/home/ata/README.md": "# ata\n",
-      "/home/ata/now/current.md": "# now\n",
+      [`${site.home}/README.md`]: "# ata\n",
+      [`${site.home}/now/current.md`]: "# now\n",
     },
-    cwd: "/home/ata",
+    cwd: site.home,
   });
   registerPortfolioCommands(bash);
   const result = await bash.exec("ls");
@@ -24,13 +25,13 @@ it("bolds directories without a trailing slash", async () => {
 it("lists one name per line for tab completion", async () => {
   const bash = new Bash({
     files: {
-      "/home/ata/README.md": "# ata\n",
-      "/home/ata/now/current.md": "# now\n",
+      [`${site.home}/README.md`]: "# ata\n",
+      [`${site.home}/now/current.md`]: "# now\n",
     },
-    cwd: "/home/ata",
+    cwd: site.home,
   });
   registerPortfolioCommands(bash);
-  const result = await bash.exec('ls -1a "/home/ata"');
+  const result = await bash.exec(`ls -1a "${site.home}"`);
   expect(result.stdout.split("\n")).toEqual(
     expect.arrayContaining(["README.md", "now"]),
   );
@@ -38,7 +39,7 @@ it("lists one name per line for tab completion", async () => {
 });
 
 it("prints a visitor-facing help list", async () => {
-  const bash = new Bash({ cwd: "/home/ata" });
+  const bash = new Bash({ cwd: site.home });
   registerPortfolioCommands(bash);
   const result = await bash.exec("help");
   expect(result.stdout).toBe(HELP_TEXT);
@@ -49,8 +50,8 @@ it("prints a visitor-facing help list", async () => {
 
 it("renders markdown through cat", async () => {
   const bash = new Bash({
-    files: { "/home/ata/README.md": "# ata\n\nhello **world**\n" },
-    cwd: "/home/ata",
+    files: { [`${site.home}/README.md`]: "# ata\n\nhello **world**\n" },
+    cwd: site.home,
   });
   registerPortfolioCommands(bash);
   const result = await bash.exec("cat README.md");
@@ -61,16 +62,16 @@ it("renders markdown through cat", async () => {
 it("annotates folders for the model without changing visitor ls", async () => {
   const bash = new Bash({
     files: {
-      "/home/ata/README.md": "# ata\n",
-      "/home/ata/now/current.md": "# now\n",
+      [`${site.home}/README.md`]: "# ata\n",
+      [`${site.home}/now/current.md`]: "# now\n",
     },
-    cwd: "/home/ata",
+    cwd: site.home,
   });
   registerPortfolioCommands(bash);
   const annotated = await annotateLsForModel(
-    "ls /home/ata",
+    `ls ${site.home}`,
     "README.md  now",
-    "/home/ata",
+    site.home,
     bash,
   );
   expect(annotated).toContain("directories:");
@@ -82,8 +83,8 @@ it("annotates folders for the model without changing visitor ls", async () => {
 
 it("tells the visitor when cat hits a directory", async () => {
   const bash = new Bash({
-    files: { "/home/ata/about/me.md": "hi\n" },
-    cwd: "/home/ata",
+    files: { [`${site.home}/about/me.md`]: "hi\n" },
+    cwd: site.home,
   });
   registerPortfolioCommands(bash);
   const result = await bash.exec("cat about");
@@ -94,12 +95,12 @@ it("tells the visitor when cat hits a directory", async () => {
 it("lists projects as stacked one-liners", async () => {
   const bash = new Bash({
     files: {
-      "/home/ata/projects/speech-core/README.md":
+      [`${site.home}/projects/speech-core/README.md`]:
         "# speech-core\n\nreal-time speech substrate for human-agent interaction.\n",
-      "/home/ata/projects/browser-ops/README.md":
+      [`${site.home}/projects/browser-ops/README.md`]:
         "# browser-ops\n\nlease a cloak browser, then drive a specific tab over a unix socket.\n",
     },
-    cwd: "/home/ata",
+    cwd: site.home,
   });
   registerPortfolioCommands(bash);
   const result = await bash.exec("ls projects");

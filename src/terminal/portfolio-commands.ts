@@ -1,5 +1,6 @@
 import { MarkdownRenderer } from "@wterm/markdown";
 import { defineCommand, type Bash, type ResolvedCommandContext } from "just-bash";
+import { projectsDir } from "../site";
 
 const DIR_COLOR = "\x1b[1;34m";
 const RESET = "\x1b[0m";
@@ -197,7 +198,7 @@ async function listNames(
 }
 
 function isProjectsDir(path: string): boolean {
-  return path.replace(/\/+$/, "") === "/home/ata/projects";
+  return path.replace(/\/+$/, "") === projectsDir;
 }
 
 async function listProjects(

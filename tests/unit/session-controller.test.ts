@@ -1,12 +1,13 @@
 import { expect, it } from "vitest";
+import { site } from "../../src/site";
 import { SessionController } from "../../src/terminal/SessionController";
 
 function createController() {
   const writes: string[] = [];
   const controller = new SessionController({
-    "/home/ata/README.md": "# ata\n",
-    "/home/ata/now/current.md": "# now\n",
-    "/home/ata/projects/speech-core/README.md": "# speech-core\n",
+    [`${site.home}/README.md`]: "# ata\n",
+    [`${site.home}/now/current.md`]: "# now\n",
+    [`${site.home}/projects/speech-core/README.md`]: "# speech-core\n",
   });
   const write = (data: string) => {
     writes.push(data);
@@ -19,7 +20,6 @@ function createController() {
   };
 }
 
-
 it("opens with cat README.md already executed", async () => {
   const { joinedWrites, write, controller } = createController();
   await controller.attach(write);
@@ -30,17 +30,18 @@ it("opens with cat README.md already executed", async () => {
   controller.setWrite((data) => remount.push(data));
   expect(remount.join("")).toContain("cat README.md");
 });
+
 it("shares cwd and history between human and agent input", async () => {
   const { controller, joinedWrites, write } = createController();
   await controller.attach(write);
 
-  await controller.handleHumanInput("cd /home/ata/projects");
+  await controller.handleHumanInput(`cd ${site.home}/projects`);
   await controller.handleHumanInput("\r");
-  expect(controller.cwd).toBe("/home/ata/projects");
+  expect(controller.cwd).toBe(`${site.home}/projects`);
 
   const result = await controller.execAsAgent("pwd", 0);
-  expect(result.cwd).toBe("/home/ata/projects");
-  expect(result.output).toContain("/home/ata/projects");
+  expect(result.cwd).toBe(`${site.home}/projects`);
+  expect(result.output).toContain(`${site.home}/projects`);
 
   await controller.handleHumanInput("\x1b[A");
   expect(joinedWrites()).toContain("pwd");

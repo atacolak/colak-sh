@@ -15,7 +15,8 @@ import { truncateForModel } from "../truncate.js";
 import { recentHistory, type HistoryTurn } from "./history.js";
 import { createPortfolioModel } from "./model.js";
 import { extractTypedCommand, finishMutter, plainChatText } from "./plain-text.js";
-import { SYSTEM_PROMPT } from "./prompt.js";
+import { systemPrompt } from "./prompt.js";
+import { site } from "../site.js";
 import { filterSuggestions } from "./suggestions.js";
 
 export type AgentRunResult = {
@@ -45,8 +46,8 @@ export async function runAgent(options: {
       const message = error instanceof Error ? error.message : "invalid command";
       return {
         command,
-        output: `${message}. one simple line: pwd cd ls cat head tail tree find grep rg wc stat. stay in /home/ata.`,
-        cwd: "/home/ata",
+        output: `${message}. one simple line: pwd cd ls cat head tail tree find grep rg wc stat. stay in ${site.home}.`,
+        cwd: site.home,
       };
     }
     if (terminalCalls >= MAX_TERMINAL_CALLS) {
@@ -82,7 +83,7 @@ export async function runAgent(options: {
   try {
     const result = streamText({
       model,
-      system: SYSTEM_PROMPT,
+      system: systemPrompt(),
       messages: toMessages(options.history, options.prompt),
       tools: { terminal_exec: terminalExec },
       stopWhen: stepCountIs(MAX_AGENT_STEPS),
@@ -129,7 +130,7 @@ export async function runAgent(options: {
       const follow = await generateText({
         model,
         maxOutputTokens: MAX_OUTPUT_TOKENS_PER_MODEL_STEP,
-        prompt: `${SYSTEM_PROMPT}\n\nvisitor asked: ${options.prompt}\nyou ran: ${recovered.command}\noutput:\n${recovered.output}\nanswer now in one or two lowercase sentences. do not type commands.`,
+        prompt: `${systemPrompt()}\n\nvisitor asked: ${options.prompt}\nyou ran: ${recovered.command}\noutput:\n${recovered.output}\nanswer now in one or two lowercase sentences. do not type commands.`,
       });
       const followText = plainChatText(follow.text);
       if (followText) {

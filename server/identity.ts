@@ -1,9 +1,10 @@
 import type { IncomingMessage } from "node:http";
+import { site } from "./site.js";
 
 const DEV_ORIGINS = new Set([
   "http://127.0.0.1:5173",
   "http://localhost:5173",
-  "https://colak.sh",
+  site.origin,
 ]);
 
 export function clientIp(req: IncomingMessage, production: boolean): string {
@@ -19,7 +20,7 @@ export function originAllowed(
   production: boolean,
 ): boolean {
   if (!origin) return !production;
-  if (production) return origin === "https://colak.sh";
+  if (production) return origin === site.origin;
   return DEV_ORIGINS.has(origin);
 }
 

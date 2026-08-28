@@ -1,0 +1,20 @@
+{
+  "title": "colak.sh",
+  "host": "colak.sh",
+  "origin": "https://colak.sh",
+  "user": "ata",
+  "home": "/home/ata",
+  "promptHost": "colak",
+  "chatTitle": "ask ata's machine",
+  "openingCommand": "cat README.md",
+  "socials": [
+    { "label": "twitter", "href": "https://x.com/reward_hacker", "icon": "twitter" },
+    { "label": "github", "href": "https://github.com/atacolak", "icon": "github" }
+  ],
+  "prompts": [
+    "what is ata working on lately?",
+    "show me something impressive",
+    "what kind of engineer is ata?",
+    "why should i talk to him?"
+  ]
+}

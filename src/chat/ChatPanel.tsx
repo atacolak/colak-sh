@@ -1,8 +1,14 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { site } from "../site";
 import { breakSentences } from "./break-sentences";
 import { INITIAL_PROMPTS, type ChatMessage, type ChatState } from "./chat-state";
 import { PromptChips } from "./PromptChips";
 import { useTypewriter } from "./use-typewriter";
+
+const ICONS: Record<string, string> = {
+  twitter: "\uEB72",
+  github: "\uE709",
+};
 
 type ChatPanelProps = {
   state: ChatState;
@@ -34,26 +40,20 @@ export function ChatPanel({ state, onPrompt }: ChatPanelProps) {
   return (
     <aside className="chat-panel">
       <div className="chat-header">
-        <h1 className="chat-title">ask ata's machine</h1>
-        <nav className="chat-socials" aria-label="ata elsewhere">
-          <a
-            className="chat-social"
-            href="https://x.com/reward_hacker"
-            target="_blank"
-            rel="noreferrer"
-            aria-label="twitter"
-          >
-            {"\uEB72"}
-          </a>
-          <a
-            className="chat-social"
-            href="https://github.com/atacolak"
-            target="_blank"
-            rel="noreferrer"
-            aria-label="github"
-          >
-            {"\uE709"}
-          </a>
+        <h1 className="chat-title">{site.chatTitle}</h1>
+        <nav className="chat-socials" aria-label="elsewhere">
+          {site.socials.map((link) => (
+            <a
+              key={link.href}
+              className="chat-social"
+              href={link.href}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={link.label}
+            >
+              {ICONS[link.icon] ?? link.label}
+            </a>
+          ))}
         </nav>
       </div>
       <PromptChips items={chips} disabled={state.active} onSelect={submit} />

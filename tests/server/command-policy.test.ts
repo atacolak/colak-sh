@@ -1,10 +1,11 @@
 import { expect, it } from "vitest";
 import { assertAgentCommand } from "../../server/command-policy";
+import { site } from "../../server/site";
 
 it("allows read-only portfolio navigation", () => {
   expect(assertAgentCommand("ls")).toBe("ls");
-  expect(assertAgentCommand("cd /home/ata/projects")).toBe(
-    "cd /home/ata/projects",
+  expect(assertAgentCommand(`cd ${site.home}/projects`)).toBe(
+    `cd ${site.home}/projects`,
   );
   expect(assertAgentCommand("cat README.md")).toBe("cat README.md");
   expect(assertAgentCommand("rg latency .")).toBe("rg latency .");

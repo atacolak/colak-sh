@@ -1,5 +1,6 @@
 import { expect, it } from "vitest";
 import { clientIp, originAllowed } from "../../server/identity";
+import { site } from "../../server/site";
 
 it("uses CF-Connecting-IP only in production", () => {
   const req = {
@@ -10,10 +11,10 @@ it("uses CF-Connecting-IP only in production", () => {
   expect(clientIp(req, false)).toBe("10.0.0.2");
 });
 
-it("allows production origin https://colak.sh", () => {
-  expect(originAllowed("https://colak.sh", true)).toBe(true);
+it("allows the configured production origin", () => {
+  expect(originAllowed(site.origin, true)).toBe(true);
   expect(originAllowed("https://evil.example", true)).toBe(false);
   expect(originAllowed("http://127.0.0.1:5173", false)).toBe(true);
-  expect(originAllowed("https://colak.sh", false)).toBe(true);
+  expect(originAllowed(site.origin, false)).toBe(true);
   expect(originAllowed("https://evil.example", false)).toBe(false);
 });

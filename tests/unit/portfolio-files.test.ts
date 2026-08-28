@@ -1,30 +1,32 @@
 import { expect, it } from "vitest";
+import { site } from "../../src/site";
 import {
+  isPortfolioPath,
   loadPortfolioFiles,
   mapContentModules,
 } from "../../src/content/portfolio-files";
 
-it("maps repository content paths into /home/ata", () => {
+it("maps repository content paths into the configured home", () => {
   const files = mapContentModules({
-    "/content/home/ata/README.md": "# ata",
-    "/content/home/ata/now/current.md": "# now",
+    [`/content${site.home}/README.md`]: "# home",
+    [`/content${site.home}/now/current.md`]: "# now",
   });
 
   expect(files).toEqual({
-    "/home/ata/README.md": "# ata",
-    "/home/ata/now/current.md": "# now",
+    [`${site.home}/README.md`]: "# home",
+    [`${site.home}/now/current.md`]: "# now",
   });
 });
 
 it("exposes the required absolute portfolio paths", () => {
   const files = loadPortfolioFiles();
   const required = [
-    "/home/ata/README.md",
-    "/home/ata/now/current.md",
-    "/home/ata/projects/speech-core/README.md",
-    "/home/ata/projects/browser-ops/README.md",
-    "/home/ata/about/me.md",
-    "/home/ata/contact/README.md",
+    `${site.home}/README.md`,
+    `${site.home}/now/current.md`,
+    `${site.home}/projects/speech-core/README.md`,
+    `${site.home}/projects/browser-ops/README.md`,
+    `${site.home}/about/me.md`,
+    `${site.home}/contact/README.md`,
   ];
 
   for (const path of required) {
@@ -32,7 +34,5 @@ it("exposes the required absolute portfolio paths", () => {
     expect(files[path]!.length).toBeGreaterThan(0);
   }
 
-  expect(Object.keys(files).every((key) => key.startsWith("/home/ata/"))).toBe(
-    true,
-  );
+  expect(Object.keys(files).every((key) => isPortfolioPath(key))).toBe(true);
 });

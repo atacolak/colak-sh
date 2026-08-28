@@ -1,9 +1,6 @@
-export const INITIAL_PROMPTS = [
-  "what is ata working on lately?",
-  "show me something impressive",
-  "what kind of engineer is ata?",
-  "why should i talk to him?",
-] as const;
+import { site } from "../site";
+
+export const INITIAL_PROMPTS = site.prompts;
 
 export type ChatMessage =
   | { role: "visitor"; text: string }

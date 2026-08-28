@@ -7,6 +7,7 @@ import type { AppConfig } from "../config.js";
 import type { UsageBudget } from "../budget.js";
 import { clientMessageSchema } from "../protocol/schema.js";
 import type { ClientMessage, ServerMessage } from "../protocol/types.js";
+import { site } from "../site.js";
 import {
   BUDGET_EXHAUSTED_MESSAGE,
   MAX_PROMPT_CHARS,
@@ -18,7 +19,7 @@ import {
 import { truncateForModel } from "../truncate.js";
 import { PendingTerminalCalls } from "./pending-terminal-calls.js";
 
-const INITIAL_PROMPT = "what is ata working on lately?";
+const INITIAL_PROMPT = site.prompts[0] ?? "";
 
 export class Session {
   readonly pendingTerminalCalls = new PendingTerminalCalls();
@@ -192,7 +193,7 @@ export class Session {
       requestId,
       text: "mostly agent infrastructure and speech systems. i'll show you.",
     });
-    await this.execOnBrowser(requestId, "cd /home/ata/now");
+    await this.execOnBrowser(requestId, `cd ${site.home}/now`);
     await this.execOnBrowser(requestId, "cat current.md");
     this.send({
       type: "suggestions",

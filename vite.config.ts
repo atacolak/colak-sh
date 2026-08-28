@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { site } from "./src/site";
 
 export default defineConfig({
   plugins: [react()],
@@ -10,7 +11,7 @@ export default defineConfig({
     },
   },
   server: {
-    allowedHosts: ["colak.sh"],
+    allowedHosts: [site.host],
     proxy: {
       "/ws": {
         target: "ws://127.0.0.1:8790",

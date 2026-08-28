@@ -2,6 +2,7 @@ import type { SessionController } from "../terminal/SessionController";
 import type { ChatState } from "../chat/chat-state";
 import type { ClientMessage, ServerMessage } from "../protocol/types";
 import { serverMessageSchema } from "../protocol/schema";
+import { site } from "../site";
 
 export type AgentClientHandlers = {
   onState: (state: ChatState) => void;
@@ -194,7 +195,7 @@ export class AgentClient {
         callId,
         command,
         output: "terminal is not ready",
-        cwd: "/home/ata",
+        cwd: site.home,
       });
       return;
     }
