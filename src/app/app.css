@@ -104,7 +104,8 @@ body,
   height: 0;
 }
 
-.terminal-pane .term-link {
+.terminal-pane .term-link,
+.terminal-pane .term-link > span {
   color: var(--accent);
   text-decoration: underline;
   text-underline-offset: 0.16em;

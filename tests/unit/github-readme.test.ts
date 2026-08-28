@@ -4,6 +4,7 @@ import {
   prepareMarkdown,
   projectBlurbFromMarkdown,
   rewriteRelativeUrls,
+  wrapAnsi,
 } from "../../src/content/github-readme";
 
 const blob = "https://github.com/atacolak/browser-ops/blob/main";
@@ -43,3 +44,26 @@ it("prefers blurb metadata and strips markdown", () => {
     ),
   ).toBe("lease a cloak browser, then drive one tab");
 });
+
+it("wraps on word boundaries without splitting tokens", () => {
+  const wrapped = wrapAnsi(
+    "one chrome process per named face. many tabs can share that process. each tab has at most one writer.",
+    40,
+  );
+  expect(wrapped.split("\n").every((line) => line.length <= 40)).toBe(true);
+  expect(wrapped).not.toMatch(/proce\nss/);
+  expect(wrapped).toContain("process");
+});
+
+it("does not count osc 8 sequences toward wrap width", () => {
+  const link = osc8("cloak", "https://github.com/CloakLabs/cloakbrowser");
+  const wrapped = wrapAnsi(`lease a ${link} browser, then drive one tab.`, 28);
+  expect(wrapped).toContain(link);
+  expect(
+    wrapped.split("\n").every((line) => visibleish(line) <= 28),
+  ).toBe(true);
+});
+
+function visibleish(text: string): number {
+  return text.replace(/\x1b(?:\]8;;[^\x07]*\x07|\[[0-9;]*m)/g, "").length;
+}

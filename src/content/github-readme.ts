@@ -102,6 +102,84 @@ export function cleanBlurb(text: string, max = 72): string {
   return `${cleaned.slice(0, Math.max(1, max - 1)).replace(/\s+\S*$/, "")}…`;
 }
 
+export function wrapAnsi(text: string, width: number): string {
+  if (width < 8) return text;
+  return text
+    .split("\n")
+    .map((line) => wrapAnsiLine(line, width))
+    .join("\n");
+}
+
+function wrapAnsiLine(line: string, width: number): string {
+  if (visibleWidth(line) <= width) return line;
+  const rows: string[] = [];
+  let row = "";
+  let rowWidth = 0;
+  let word = "";
+  let wordWidth = 0;
+  const flushWord = () => {
+    if (!word) return;
+    if (rowWidth > 0 && rowWidth + 1 + wordWidth > width) {
+      rows.push(row);
+      row = word;
+      rowWidth = wordWidth;
+    } else {
+      if (rowWidth > 0) {
+        row += " ";
+        rowWidth += 1;
+      }
+      row += word;
+      rowWidth += wordWidth;
+    }
+    word = "";
+    wordWidth = 0;
+  };
+  for (const token of tokenizeAnsi(line)) {
+    if (token.kind === "esc") {
+      word += token.value;
+      continue;
+    }
+    if (token.value === " ") {
+      flushWord();
+      continue;
+    }
+    if (wordWidth >= width) {
+      flushWord();
+    }
+    word += token.value;
+    wordWidth += 1;
+    if (wordWidth >= width) flushWord();
+  }
+  flushWord();
+  if (row) rows.push(row);
+  return rows.join("\n");
+}
+
+function tokenizeAnsi(
+  text: string,
+): Array<{ kind: "esc" | "char"; value: string }> {
+  const tokens: Array<{ kind: "esc" | "char"; value: string }> = [];
+  const re = /\x1b(?:\]8;;[^\x07]*\x07|\[[0-9;]*m)/g;
+  let last = 0;
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(text))) {
+    for (const ch of text.slice(last, match.index)) {
+      tokens.push({ kind: "char", value: ch });
+    }
+    tokens.push({ kind: "esc", value: match[0] });
+    last = match.index + match[0].length;
+  }
+  for (const ch of text.slice(last)) {
+    tokens.push({ kind: "char", value: ch });
+  }
+  return tokens;
+}
+
+function visibleWidth(text: string): number {
+  return tokenizeAnsi(text).filter((token) => token.kind === "char").length;
+}
+
+
 function resolve(url: string, base: string): string {
   const trimmed = url.trim();
   if (!trimmed || ABSOLUTE.test(trimmed)) return trimmed;

@@ -1,6 +1,6 @@
 import { MarkdownRenderer } from "@wterm/markdown";
 import { defineCommand, type Bash, type ResolvedCommandContext } from "just-bash";
-import { prepareMarkdown, projectBlurbFromMarkdown } from "../content/github-readme";
+import { prepareMarkdown, projectBlurbFromMarkdown, wrapAnsi } from "../content/github-readme";
 import { projectsDir } from "../site";
 
 const DIR_COLOR = "\x1b[1;34m";
@@ -261,5 +261,6 @@ async function fileBlurb(
 
 function renderMarkdown(source: string): string {
   const renderer = new MarkdownRenderer({ width: 80 });
-  return `${renderer.push(source)}${renderer.flush()}`;
+  const rendered = `${renderer.push(source)}${renderer.flush()}`;
+  return wrapAnsi(rendered.replace(/\r\n/g, "\n"), 80);
 }
