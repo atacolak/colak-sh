@@ -15,5 +15,16 @@ export function plainChatText(text: string): string {
   if (typed) {
     next = next.slice(0, next.lastIndexOf(typed)).replace(/[\s.]+$/, "");
   }
-  return next;
+  return finishMutter(next);
+}
+
+export function finishMutter(text: string): string {
+  const trimmed = text.replace(/\s+/g, " ").trim();
+  if (!trimmed) return "";
+  const closed = trimmed.replace(
+    /\b(?:to|for|and|or|of|at|in|on|with|from|into|about|the|a|an)$/i,
+    "",
+  ).trim();
+  if (!closed) return "";
+  return /[.!?]$/.test(closed) ? `${closed} ` : `${closed}. `;
 }

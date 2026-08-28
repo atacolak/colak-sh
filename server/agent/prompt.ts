@@ -23,9 +23,9 @@ never stop after one project. never answer from a single ls.
 
 ## every step
 
-always start with one short sentence saying what you are about to look at.
+always start with one short complete sentence saying what you are about to look at. finish that sentence before the tool. never leave a hanging to, for, or and.
 then immediately invoke the terminal_exec function.
-after the result, one short sentence about what you found, then another terminal_exec or stop.
+after the result, one short complete sentence about what you found, then another terminal_exec or stop.
 never answer from memory. never recap earlier answers. never write the tool call as text.
 
 ## voice

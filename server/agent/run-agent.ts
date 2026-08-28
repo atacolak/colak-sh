@@ -14,7 +14,7 @@ import type { ServerMessage, TerminalResultMessage } from "../protocol/types.js"
 import { truncateForModel } from "../truncate.js";
 import { recentHistory, type HistoryTurn } from "./history.js";
 import { createPortfolioModel } from "./model.js";
-import { extractTypedCommand, plainChatText } from "./plain-text.js";
+import { extractTypedCommand, finishMutter, plainChatText } from "./plain-text.js";
 import { SYSTEM_PROMPT } from "./prompt.js";
 import { filterSuggestions } from "./suggestions.js";
 
@@ -99,20 +99,29 @@ export async function runAgent(options: {
 
     let sawToolCall = false;
     let pendingTyped: string | undefined;
+    let mutter = "";
+    const flushMutter = () => {
+      const text = finishMutter(plainChatText(mutter));
+      mutter = "";
+      if (!text) return;
+      spoken += text;
+      options.send({
+        type: "assistant_delta",
+        requestId: options.requestId,
+        text,
+      });
+    };
     for await (const part of result.fullStream) {
-      if (part.type === "tool-call") sawToolCall = true;
+      if (part.type === "tool-call") {
+        sawToolCall = true;
+        flushMutter();
+      }
       if (part.type === "text-delta" && part.text) {
-        spoken += part.text;
-        pendingTyped = extractTypedCommand(spoken) ?? pendingTyped;
-        const text = plainChatText(part.text);
-        if (!text) continue;
-        options.send({
-          type: "assistant_delta",
-          requestId: options.requestId,
-          text,
-        });
+        mutter += part.text;
+        pendingTyped = extractTypedCommand(mutter) ?? pendingTyped;
       }
     }
+    flushMutter();
 
     if (!sawToolCall && pendingTyped) {
       spoken = plainChatText(spoken);

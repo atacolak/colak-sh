@@ -44,6 +44,7 @@ it("sends terminal_exec, continues, answers, then suggests", async () => {
       return {
         fullStream: (async function* () {
           yield { type: "text-delta", text: "peeking at now. " };
+          yield { type: "tool-call", toolName: "terminal_exec" };
           await toolResult;
           yield { type: "text-delta", text: "speech-core is the live thread." };
         })(),
@@ -81,12 +82,12 @@ it("sends terminal_exec, continues, answers, then suggests", async () => {
   expect(exec).toHaveBeenCalledWith("ls");
   expect(sent.filter((message) => message.type === "assistant_delta").map((m) => m.text)).toEqual([
     "peeking at now. ",
-    "speech-core is the live thread.",
+    "speech-core is the live thread. ",
   ]);
   expect(sent.some((message) => message.type === "suggestions")).toBe(true);
   expect(result.tokens).toBe(30);
   expect(result.missingUsage).toBe(false);
-  expect(result.answer).toBe("peeking at now. speech-core is the live thread.");
+  expect(result.answer).toBe("peeking at now. speech-core is the live thread. ");
 });
 
 it("returns an error payload instead of throwing on a bad command", async () => {
@@ -129,7 +130,7 @@ it("returns an error payload instead of throwing on a bad command", async () => 
     config,
   });
   expect(exec).not.toHaveBeenCalled();
-  expect(result.answer).toBe("that command is illegal here.");
+  expect(result.answer).toBe("that command is illegal here. ");
 });
 
 it("recovers a typed shell command as a real terminal_exec", async () => {

@@ -86,21 +86,12 @@ body,
 }
 
 .terminal-pane .wterm.has-scrollback {
-  scrollbar-width: thin;
-  scrollbar-color: #5a5a5a transparent;
+  scrollbar-width: none;
 }
 
 .terminal-pane .wterm.has-scrollback::-webkit-scrollbar {
-  width: 6px;
-}
-
-.terminal-pane .wterm.has-scrollback::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.terminal-pane .wterm.has-scrollback::-webkit-scrollbar-thumb {
-  background: #5a5a5a;
-  border-radius: 999px;
+  width: 0;
+  height: 0;
 }
 
 .chat-panel {
@@ -181,21 +172,12 @@ body,
   color: var(--muted);
   font-size: 0.92rem;
   line-height: 1.4;
-  scrollbar-width: thin;
-  scrollbar-color: #5a5a5a transparent;
+  scrollbar-width: none;
 }
 
 .chat-log::-webkit-scrollbar {
-  width: 6px;
-}
-
-.chat-log::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.chat-log::-webkit-scrollbar-thumb {
-  background: #5a5a5a;
-  border-radius: 999px;
+  width: 0;
+  height: 0;
 }
 
 .chat-log p {
