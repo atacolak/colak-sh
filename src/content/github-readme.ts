@@ -56,11 +56,21 @@ export function prepareMarkdown(source: string): {
 } {
   const images = extractMarkdownImages(source);
   let text = source
+    .replace(/^blurb:.*\n/gm, "")
+    .replace(/^(origin|upstream):\s+(\S+)\s*$/gm, (_m, key: string, url: string) => {
+      const href = url.replace(/^<|>$/g, "");
+      if (/^https?:\/\//.test(href)) {
+        return `${key}: [${href.replace(/^https?:\/\//, "")}](${href})`;
+      }
+      return `${key}: ${url}`;
+    })
+    .replace(/^(?:language|updated):.*\n/gm, "")
     .replace(/!\[([^\]]*)\]\([^)]*\)/g, "")
     .replace(/<img\b[^>]*>/gi, "")
     .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, (_m, label, url) =>
       osc8(label, url),
-    );
+    )
+    .replace(/^\n+/, "");
   text = autolinkBareUrls(text);
   return { text, images };
 }

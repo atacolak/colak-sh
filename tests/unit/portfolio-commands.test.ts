@@ -119,7 +119,7 @@ it("publishes github images from cat markdown", async () => {
   const bash = new Bash({
     files: {
       [`${site.home}/projects/browser-ops.md`]:
-        `# browser-ops\n<img alt="knight" src="${src}" />\n`,
+        `blurb: lease a cloak browser\n# browser-ops\n<img alt="knight" src="${src}" />\n`,
     },
     cwd: site.home,
   });
@@ -127,5 +127,6 @@ it("publishes github images from cat markdown", async () => {
   const result = await bash.exec("cat projects/browser-ops.md");
   expect(getViewedImages()).toEqual([{ src, alt: "knight" }]);
   expect(result.stdout).not.toContain("<img");
+  expect(result.stdout).not.toContain("blurb:");
   expect(result.stdout).not.toContain(src);
 });
