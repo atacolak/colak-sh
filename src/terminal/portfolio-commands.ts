@@ -1,8 +1,7 @@
 import { MarkdownRenderer } from "@wterm/markdown";
 import { defineCommand, type Bash, type ResolvedCommandContext } from "just-bash";
-import { prepareMarkdown, projectBlurbFromMarkdown, type PortfolioImage } from "../content/github-readme";
+import { prepareMarkdown, projectBlurbFromMarkdown } from "../content/github-readme";
 import { projectsDir } from "../site";
-import { setViewedImages } from "./portfolio-images";
 
 const DIR_COLOR = "\x1b[1;34m";
 const RESET = "\x1b[0m";
@@ -149,7 +148,6 @@ const catCommand = defineCommand("cat", async (args, ctx) => {
   }
 
   const chunks: string[] = [];
-  const images: PortfolioImage[] = [];
   for (const file of files) {
     const resolved = ctx.fs.resolvePath(ctx.cwd, file);
     try {
@@ -162,13 +160,11 @@ const catCommand = defineCommand("cat", async (args, ctx) => {
         };
       }
       const text = await ctx.fs.readFile(resolved);
-      if (file.endsWith(".md") || resolved.endsWith(".md")) {
-        const prepared = prepareMarkdown(text);
-        images.push(...prepared.images);
-        chunks.push(renderMarkdown(prepared.text));
-      } else {
-        chunks.push(text);
-      }
+      chunks.push(
+        file.endsWith(".md") || resolved.endsWith(".md")
+          ? renderMarkdown(prepareMarkdown(text))
+          : text,
+      );
     } catch {
       return {
         stdout: "",
@@ -177,7 +173,6 @@ const catCommand = defineCommand("cat", async (args, ctx) => {
       };
     }
   }
-  setViewedImages(images);
   return { stdout: chunks.join(""), stderr: "", exitCode: 0 };
 });
 

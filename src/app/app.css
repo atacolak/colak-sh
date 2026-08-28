@@ -46,33 +46,6 @@ body,
   overflow: hidden;
 }
 
-.exhibit.has-stills {
-  display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
-}
-
-.exhibit-stills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.7rem;
-  padding: 0 1.1rem 1.1rem;
-  min-width: 0;
-}
-
-.exhibit-stills a {
-  display: block;
-  max-width: min(420px, 100%);
-}
-
-.exhibit-stills img {
-  display: block;
-  width: 100%;
-  max-height: 28vh;
-  object-fit: contain;
-  border: 1px solid var(--line);
-  background: rgba(11, 15, 20, 0.55);
-}
-
 .terminal-pane {
   min-width: 0;
   min-height: 0;
@@ -272,10 +245,6 @@ body,
   .exhibit,
   .terminal-pane {
     min-height: 52dvh;
-  }
-
-  .exhibit.has-stills {
-    grid-template-rows: minmax(40dvh, 1fr) auto;
   }
 
   .chat-panel {

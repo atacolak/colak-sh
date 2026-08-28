@@ -1,8 +1,3 @@
-export type PortfolioImage = {
-  src: string;
-  alt: string;
-};
-
 const ABSOLUTE = /^(?:[a-z][a-z0-9+.-]*:|\/\/|#|mailto:)/i;
 const BEL = "\x07";
 
@@ -30,31 +25,7 @@ export function rewriteRelativeUrls(
     });
 }
 
-export function extractMarkdownImages(markdown: string): PortfolioImage[] {
-  const seen = new Set<string>();
-  const images: PortfolioImage[] = [];
-  const add = (src: string, alt: string) => {
-    const url = src.trim();
-    if (!url || seen.has(url) || !isAllowedImageUrl(url)) return;
-    seen.add(url);
-    images.push({ src: url, alt: alt.trim() });
-  };
-  for (const match of markdown.matchAll(/!\[([^\]]*)\]\(([^)]+)\)/g)) {
-    add(match[2] ?? "", match[1] ?? "");
-  }
-  for (const match of markdown.matchAll(/<img\b[^>]*\bsrc=["']([^"']+)["'][^>]*>/gi)) {
-    const tag = match[0];
-    const alt = tag.match(/\balt=["']([^"']*)["']/i)?.[1] ?? "";
-    add(match[1] ?? "", alt);
-  }
-  return images;
-}
-
-export function prepareMarkdown(source: string): {
-  text: string;
-  images: PortfolioImage[];
-} {
-  const images = extractMarkdownImages(source);
+export function prepareMarkdown(source: string): string {
   let text = source
     .replace(/^blurb:.*\n/gm, "")
     .replace(/^(origin|upstream):\s+(\S+)\s*$/gm, (_m, key: string, url: string) => {
@@ -71,8 +42,7 @@ export function prepareMarkdown(source: string): {
       osc8(label, url),
     )
     .replace(/^\n+/, "");
-  text = autolinkBareUrls(text);
-  return { text, images };
+  return autolinkBareUrls(text);
 }
 
 function autolinkBareUrls(text: string): string {
@@ -130,23 +100,6 @@ export function cleanBlurb(text: string, max = 72): string {
     .replace(/\.$/, "");
   if (cleaned.length <= max) return cleaned;
   return `${cleaned.slice(0, Math.max(1, max - 1)).replace(/\s+\S*$/, "")}…`;
-}
-
-export function isAllowedImageUrl(url: string): boolean {
-  try {
-    const parsed = new URL(url);
-    if (parsed.protocol !== "https:") return false;
-    const host = parsed.hostname;
-    return (
-      host === "github.com" ||
-      host === "raw.githubusercontent.com" ||
-      host === "user-images.githubusercontent.com" ||
-      host === "private-user-images.githubusercontent.com" ||
-      host === "camo.githubusercontent.com"
-    );
-  } catch {
-    return false;
-  }
 }
 
 function resolve(url: string, base: string): string {

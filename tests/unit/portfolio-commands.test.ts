@@ -1,12 +1,12 @@
 import { expect, it } from "vitest";
 import { Bash } from "just-bash";
+import { osc8 } from "../../src/content/github-readme";
 import { site } from "../../src/site";
 import {
   annotateLsForModel,
   HELP_TEXT,
   registerPortfolioCommands,
 } from "../../src/terminal/portfolio-commands";
-import { getViewedImages } from "../../src/terminal/portfolio-images";
 
 it("bolds directories without a trailing slash", async () => {
   const bash = new Bash({
@@ -113,20 +113,20 @@ it("lists projects as stacked one-liners", async () => {
   expect(result.stdout).toContain("lease a cloak browser");
 });
 
-it("publishes github images from cat markdown", async () => {
+it("strips figures and blurb metadata from cat markdown", async () => {
   const src =
     "https://github.com/user-attachments/assets/b8ed1001-82c1-47d8-8013-7ea4aaf38911";
   const bash = new Bash({
     files: {
       [`${site.home}/projects/browser-ops.md`]:
-        `blurb: lease a cloak browser\n# browser-ops\n<img alt="knight" src="${src}" />\n`,
+        `blurb: lease a cloak browser\n# browser-ops\n<img alt="knight" src="${src}" />\nsee [Cloak](https://github.com/CloakLabs/cloakbrowser).\n`,
     },
     cwd: site.home,
   });
   registerPortfolioCommands(bash);
   const result = await bash.exec("cat projects/browser-ops.md");
-  expect(getViewedImages()).toEqual([{ src, alt: "knight" }]);
   expect(result.stdout).not.toContain("<img");
   expect(result.stdout).not.toContain("blurb:");
   expect(result.stdout).not.toContain(src);
+  expect(result.stdout).toContain(osc8("Cloak", "https://github.com/CloakLabs/cloakbrowser"));
 });

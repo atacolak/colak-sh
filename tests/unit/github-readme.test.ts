@@ -1,6 +1,5 @@
 import { expect, it } from "vitest";
 import {
-  extractMarkdownImages,
   osc8,
   prepareMarkdown,
   projectBlurbFromMarkdown,
@@ -20,31 +19,19 @@ it("rewrites relative markdown links against blob and images against raw", () =>
   expect(out).toContain(`${raw}/docs/knight.png`);
 });
 
-it("rewrites html images and keeps github attachment urls", () => {
-  const src =
-    "https://github.com/user-attachments/assets/b8ed1001-82c1-47d8-8013-7ea4aaf38911";
-  const out = rewriteRelativeUrls(
-    `<img width="720" alt="knight" src="${src}" />`,
-    blob,
-    raw,
-  );
-  expect(out).toContain(src);
-  expect(extractMarkdownImages(out)).toEqual([{ src, alt: "knight" }]);
-});
-
-it("strips images, blurb metadata, and wraps markdown links as osc 8", () => {
+it("strips figures and blurb metadata, and wraps markdown links as osc 8", () => {
   const src =
     "https://github.com/user-attachments/assets/b8ed1001-82c1-47d8-8013-7ea4aaf38911";
   const prepared = prepareMarkdown(
     `blurb: lease a cloak browser\norigin: https://github.com/atacolak/browser-ops\n# browser-ops\n<img alt="knight" src="${src}" />\n\nsee [Cloak](https://github.com/CloakLabs/cloakbrowser).\n`,
   );
-  expect(prepared.images).toEqual([{ src, alt: "knight" }]);
-  expect(prepared.text).not.toContain("<img");
-  expect(prepared.text).not.toContain("blurb:");
-  expect(prepared.text).toContain(
+  expect(prepared).not.toContain("<img");
+  expect(prepared).not.toContain("blurb:");
+  expect(prepared).not.toContain(src);
+  expect(prepared).toContain(
     osc8("github.com/atacolak/browser-ops", "https://github.com/atacolak/browser-ops"),
   );
-  expect(prepared.text).toContain(
+  expect(prepared).toContain(
     osc8("Cloak", "https://github.com/CloakLabs/cloakbrowser"),
   );
 });

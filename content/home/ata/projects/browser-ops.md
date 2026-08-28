@@ -2,8 +2,6 @@ blurb: lease a cloak browser, then drive one tab over a unix socket
 
 # browser-ops
 
-<img width="720" height="288" alt="knight" src="https://github.com/user-attachments/assets/b8ed1001-82c1-47d8-8013-7ea4aaf38911" />
-
 origin: [github.com/atacolak/browser-ops](https://github.com/atacolak/browser-ops)
 
 lease a [cloak](https://github.com/CloakLabs/cloakbrowser) browser, then drive one tab over a unix socket. one chrome process per named face. many tabs can share that process. each tab has at most one writer.
