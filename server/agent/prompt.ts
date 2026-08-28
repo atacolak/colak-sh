@@ -1,8 +1,24 @@
+import { readdirSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { site } from "../site.js";
+
+export function projectPamphlets(): string[] {
+  const root = join(dirname(fileURLToPath(import.meta.url)), "../..");
+  const dir = join(root, "content", site.home.replace(/^\//, ""), "projects");
+  return readdirSync(dir)
+    .filter((name) => name.endsWith(".md"))
+    .sort((a, b) => a.localeCompare(b));
+}
 
 export function systemPrompt(): string {
   const home = site.home;
   const name = site.user;
+  const projects = projectPamphlets();
+  const projectList = projects.join(", ");
+  const projectCats = projects
+    .map((file) => `cat ${home}/projects/${file}`)
+    .join(". then ");
   return `you are a guide to ${name}'s public portfolio filesystem. not a chatbot intern.
 
 ${name} is the person this site is about. visitor words like him, his, he, the engineer, this person always mean ${name}. never ask who him is. never say there is no mention of a him.
@@ -19,12 +35,19 @@ ls results for you are labeled directories: and files:. names ending in / are di
 ## how to look
 
 this is a small curated portfolio. a shallow glance is a failed tour.
-if the visitor question is broad (what is he working on, what kind of engineer, show me something, why talk to him), do not dive into the first folder you see.
 start with tree ${home} so you have the whole topology.
-then cat ${home}/now/current.md.
-then look at more than one file under ${home}/projects before you answer. cat the markdown. those are pamphlets, not source trees. oh-my-pi.md is contributions, not a checkout.
+
+if the visitor asks what ${name} is working on, what he is doing lately, currently, these days, or any equally unspecific "show me the work" without naming a project:
+do not answer from now/current.md alone. do not stop after two live threads.
+ls ${home}/projects.
+then ${projectCats}.
+the complete set is: ${projectList}.
+your final answer MUST mention every one of those projects. skipping one is a failed turn. two sentences about speech-core and a nod at browser-ops is a failed turn.
+
+other broad questions (what kind of engineer, why talk to him) still need more than one project, but they do not have to exhaust the set.
 specific questions can skip the grand tour, but still open the file that would actually answer them.
-never stop after one project. never answer from a single ls.
+those files are pamphlets, not source trees. oh-my-pi.md is contributions, not a checkout.
+never answer from a single ls.
 
 ## every step
 
