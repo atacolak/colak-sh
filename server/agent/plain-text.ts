@@ -1,12 +1,32 @@
 const MARKUP = /[*`#]+/g;
 const TOOL_ECHO = /\bterminal[_ ]?exec\b[:\s]*[^\n]*/gi;
 const TYPED_COMMAND =
-  /(?:^|[\s.])((?:pwd|cd|ls|cat|head|tail|tree|find|grep|rg|wc|stat)(?:\s+\S+)*)\s*$/i;
+  /(?:^|[\s.])((?:pwd|cd|ls|cat|head|tail|tree|find|grep|rg|wc|stat)(?:\s+\S+){0,5})\s*$/i;
+const SHELL_ARG = /^(?:-[A-Za-z0-9._-]{1,8}|\.{1,2}|~?(?:\/[A-Za-z0-9._-]+)+|\/|[A-Za-z0-9._-]+(?:\/[A-Za-z0-9._-]+)*)$/;
 
 export function extractTypedCommand(text: string): string | undefined {
   const match = text.match(TYPED_COMMAND);
   const command = match?.[1]?.trim();
-  return command || undefined;
+  if (!command) return undefined;
+  return looksLikeShell(command) ? command : undefined;
+}
+
+export function looksLikeShell(command: string): boolean {
+  const tokens = command.trim().split(/\s+/);
+  if (tokens.length === 0 || tokens.length > 6) return false;
+  const name = tokens[0]?.toLowerCase() ?? "";
+  if (!name) return false;
+  if (tokens.length === 1) return name === "pwd" || name === "ls" || name === "tree";
+  for (const token of tokens.slice(1)) {
+    if (!SHELL_ARG.test(token) || (token.endsWith(".") && token !== "." && token !== "..")) return false;
+  }
+  if (
+    (name === "find" || name === "grep" || name === "rg") &&
+    !tokens.slice(1).some((token) => token === "." || token.includes("/") || token.startsWith("-"))
+  ) {
+    return false;
+  }
+  return true;
 }
 
 export function plainChatText(text: string): string {

@@ -22,6 +22,11 @@ it("drops typed tool invocations from chat", () => {
 it("extracts a typed shell command from chat", () => {
   expect(extractTypedCommand("i am listing files. ls /home/ata")).toBe("ls /home/ata");
   expect(plainChatText("i am listing files. ls /home/ata")).toBe("i am listing files. ");
+  expect(
+    extractTypedCommand(
+      "find none here, as he remains staunchly skeptical of any system that sacrifices durability for the illusion of low-latency availability.",
+    ),
+  ).toBeUndefined();
 });
 
 it("closes a hanging mutter instead of leaving to", () => {

@@ -11,10 +11,15 @@ it("allows read-only portfolio navigation", () => {
   expect(assertAgentCommand("rg latency .")).toBe("rg latency .");
 });
 
-it("rejects composition and unsafe commands", () => {
+it("rejects composition, english, and unsafe commands", () => {
   expect(() => assertAgentCommand("while true; do :; done")).toThrow();
   expect(() => assertAgentCommand("cat README.md | something")).toThrow();
   expect(() => assertAgentCommand("rm -rf /")).toThrow();
   expect(() => assertAgentCommand("curl https://example.com")).toThrow();
   expect(() => assertAgentCommand("cat x && cat y")).toThrow();
+  expect(() =>
+    assertAgentCommand(
+      "find none here, as he remains staunchly skeptical",
+    ),
+  ).toThrow();
 });

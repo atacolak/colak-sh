@@ -13,3 +13,10 @@ it("lists every project pamphlet for a broad what-is-he-working-on tour", () => 
     expect(prompt, file).toContain(`cat ${site.home}/projects/${file}`);
   }
 });
+
+it("forbids invented paths and prose-as-shell", () => {
+  const prompt = systemPrompt();
+  expect(prompt).toContain("never name a file, folder, or path you have not already seen");
+  expect(prompt).toContain("do not fabricate a file");
+  expect(prompt).toContain("find, ls, cat, grep are tools, not english verbs");
+});

@@ -178,7 +178,7 @@ async function suggestNext(
     const result = await generateText({
       model,
       maxOutputTokens: MAX_SUGGESTION_OUTPUT_TOKENS,
-      prompt: `visitor asked: ${prompt}\nyou answered: ${answer}\nreturn JSON array of 0-3 specific next questions. no generic filler. lowercase. no markdown.`,
+      prompt: `visitor asked: ${prompt}\nyou answered: ${answer}\nreturn JSON array of 0-3 next questions about ata or a named project (speech-core, browser-ops, systemd-ops, voicecat, colak-sh, oh-my-pi). lowercase. no markdown. no generic filler. no questions about distributed systems, cap theorem, or topics not in the filesystem.`,
     });
     return filterSuggestions(JSON.parse(result.text) as unknown);
   } catch {
