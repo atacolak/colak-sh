@@ -97,9 +97,9 @@ it("lists projects as stacked one-liners", async () => {
   const bash = new Bash({
     files: {
       [`${site.home}/projects/speech-core.md`]:
-        "# speech-core\n\nreal-time speech substrate for human-agent interaction.\n",
+        "blurb: realtime speech substrate. immutable turns\n\n# speech-core\n",
       [`${site.home}/projects/browser-ops.md`]:
-        "# browser-ops\n\nlease a cloak browser, then drive a specific tab over a unix socket.\n",
+        "blurb: lease a cloak browser, then drive one tab\n\n# browser-ops\n",
     },
     cwd: site.home,
   });
@@ -107,9 +107,10 @@ it("lists projects as stacked one-liners", async () => {
   const result = await bash.exec("ls projects");
   const lines = result.stdout.trim().split("\n");
   expect(lines).toHaveLength(2);
-  expect(result.stdout).toContain("speech-core.md");
-  expect(result.stdout).toContain("real-time speech substrate");
-  expect(result.stdout).toContain("browser-ops.md");
+  expect(result.stdout).toContain("speech-core");
+  expect(result.stdout).not.toContain("speech-core.md");
+  expect(result.stdout).toContain("realtime speech substrate");
+  expect(result.stdout).toContain("browser-ops");
   expect(result.stdout).toContain("lease a cloak browser");
 });
 
@@ -124,6 +125,8 @@ it("publishes github images from cat markdown", async () => {
     cwd: site.home,
   });
   registerPortfolioCommands(bash);
-  await bash.exec("cat projects/browser-ops.md");
+  const result = await bash.exec("cat projects/browser-ops.md");
   expect(getViewedImages()).toEqual([{ src, alt: "knight" }]);
+  expect(result.stdout).not.toContain("<img");
+  expect(result.stdout).not.toContain(src);
 });

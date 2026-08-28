@@ -12,15 +12,15 @@ live: [colak.sh](https://colak.sh)
 - human and agent share one `BashShell`. both go through `handleInput()`. do not `bash.exec()` as the agent path — that is a second cwd/history.
 - the agent has one tool: `terminal_exec`. the browser runs it. the server only rendezvouses.
 - model credentials stay on the server. never `VITE_*`.
-- identity, origin, prompts, socials, and the github catalog live in `site.json`. wallpaper is `src/assets/wallpaper.jpg`. swap those, not the code.
-- `projects/` is a flattened github catalog (`pnpm sync:projects`), not a source tree. `oh-my-pi.md` is contributions, not a checkout.
+- identity, origin, prompts, socials, and github user live in `site.json`. wallpaper is `src/assets/wallpaper.jpg`. swap those, not the code.
+- `projects/` is every public github repo for that user, flattened to markdown. the server refreshes `/catalog` on a 15-minute ttl. snapshots under `content/` are the offline fallback. `oh-my-pi.md` is contributions, not a checkout.
 
 ## make it yours
 
-1. edit `site.json` (`user`, `home`, `origin`, `chatTitle`, `prompts`, `socials`, `github.projects`).
+1. edit `site.json` (`user`, `home`, `origin`, `chatTitle`, `prompts`, `socials`, `github.user`).
 2. replace `content/home/<user>/` with your files. keep a `README.md` at the home root if you want the opening `cat`.
 3. replace `src/assets/wallpaper.jpg`.
-4. `pnpm sync:projects` (needs `gh auth` or `GITHUB_TOKEN`).
+4. optional: `pnpm sync:projects` to refresh the offline snapshots (`gh auth` or `GITHUB_TOKEN`).
 5. put `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL` in a local env file, never in git.
 
 ```bash

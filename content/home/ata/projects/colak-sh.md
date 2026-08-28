@@ -1,6 +1,7 @@
 origin: https://github.com/atacolak/colak-sh
 language: TypeScript
 updated: 2026-08-28
+blurb: terminal-native public portfolio. visitor and agent share one shell
 
 # colak.sh
 

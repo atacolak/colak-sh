@@ -15,7 +15,8 @@ export type Site = {
   prompts: string[];
   github: {
     user: string;
-    projects: Array<Record<string, string>>;
+    exclude: string[];
+    contributions: Array<{ name: string; upstream: string; fork: string }>;
   };
 };
 

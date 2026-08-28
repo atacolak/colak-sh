@@ -1,6 +1,7 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, type MouseEvent } from "react";
 import { Terminal, useTerminal } from "@wterm/react";
 import "@wterm/react/css";
+import type { CatalogResponse } from "../content/github-catalog";
 import { loadPortfolioFiles } from "../content/portfolio-files";
 import { followWrite } from "./follow-scroll";
 import { SessionController } from "./SessionController";
@@ -24,7 +25,18 @@ export function TerminalPane({ onController }: TerminalPaneProps) {
     if (!controllerRef.current) {
       const controller = new SessionController(loadPortfolioFiles());
       controllerRef.current = controller;
-      attachRef.current = controller.attach(sink).then(() => controller);
+      attachRef.current = controller.attach(sink).then(async () => {
+        try {
+          const response = await fetch("/catalog");
+          if (response.ok) {
+            const catalog = (await response.json()) as CatalogResponse;
+            await controller.mergeFiles(catalog.files);
+          }
+        } catch {
+          /* snapshots stay */
+        }
+        return controller;
+      });
     } else {
       controllerRef.current.setWrite(sink);
     }
@@ -37,12 +49,25 @@ export function TerminalPane({ onController }: TerminalPaneProps) {
     void controllerRef.current?.handleHumanInput(data);
   }, []);
 
-  const handleClick = useCallback(() => {
-    focus();
-  }, [focus]);
+  const handleClick = useCallback(
+    (event: MouseEvent<HTMLElement>) => {
+      const target = event.target;
+      if (target instanceof Element) {
+        const link = target.closest("a.term-link");
+        if (link instanceof HTMLAnchorElement && link.href) {
+          event.preventDefault();
+          event.stopPropagation();
+          window.open(link.href, "_blank", "noopener,noreferrer");
+          return;
+        }
+      }
+      focus();
+    },
+    [focus],
+  );
 
   return (
-    <section className="terminal-pane" onClick={handleClick}>
+    <section className="terminal-pane" onClickCapture={handleClick}>
       <Terminal
         ref={ref}
         autoResize

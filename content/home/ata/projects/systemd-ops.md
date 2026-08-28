@@ -1,6 +1,7 @@
 origin: https://github.com/atacolak/systemd-ops
 language: Rust
 updated: 2026-08-27
+blurb: inspect, control, and author systemd. writes only through plan/apply
 
 # systemd-ops
 

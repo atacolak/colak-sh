@@ -1,6 +1,6 @@
 import { MarkdownRenderer } from "@wterm/markdown";
 import { defineCommand, type Bash, type ResolvedCommandContext } from "just-bash";
-import { extractMarkdownImages, firstParagraph, type PortfolioImage } from "../content/github-readme";
+import { prepareMarkdown, projectBlurbFromMarkdown, type PortfolioImage } from "../content/github-readme";
 import { projectsDir } from "../site";
 import { setViewedImages } from "./portfolio-images";
 
@@ -163,8 +163,9 @@ const catCommand = defineCommand("cat", async (args, ctx) => {
       }
       const text = await ctx.fs.readFile(resolved);
       if (file.endsWith(".md") || resolved.endsWith(".md")) {
-        images.push(...extractMarkdownImages(text));
-        chunks.push(renderMarkdown(text));
+        const prepared = prepareMarkdown(text);
+        images.push(...prepared.images);
+        chunks.push(renderMarkdown(prepared.text));
       } else {
         chunks.push(text);
       }
@@ -217,9 +218,10 @@ async function listProjects(
   const names = (await ctx.fs.readdir(path))
     .filter((name) => !name.startsWith("."))
     .sort((a, b) => a.localeCompare(b));
-  const width = Math.max(12, ...names.map((name) => name.length));
+  const display = names.map((name) => name.replace(/\.md$/, ""));
+  const width = Math.max(12, ...display.map((name) => name.length));
   const rows: string[] = [];
-  for (const name of names) {
+  for (const [index, name] of names.entries()) {
     const child = ctx.fs.resolvePath(path, name);
     let dir = false;
     try {
@@ -227,8 +229,9 @@ async function listProjects(
     } catch {
       dir = false;
     }
-    const label = dir ? `${DIR_COLOR}${name}${RESET}` : name;
-    const pad = " ".repeat(Math.max(1, width - name.length + 2));
+    const shown = display[index] ?? name;
+    const label = dir ? `${DIR_COLOR}${shown}${RESET}` : shown;
+    const pad = " ".repeat(Math.max(1, width - shown.length + 2));
     const blurb = dir
       ? await projectBlurb(ctx, child)
       : name.endsWith(".md")
@@ -244,7 +247,7 @@ async function projectBlurb(
   dir: string,
 ): Promise<string> {
   try {
-    return firstParagraph(
+    return projectBlurbFromMarkdown(
       await ctx.fs.readFile(ctx.fs.resolvePath(dir, "README.md")),
     );
   } catch {
@@ -257,7 +260,7 @@ async function fileBlurb(
   path: string,
 ): Promise<string> {
   try {
-    return firstParagraph(await ctx.fs.readFile(path));
+    return projectBlurbFromMarkdown(await ctx.fs.readFile(path));
   } catch {
     return "";
   }

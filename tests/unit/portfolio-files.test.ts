@@ -25,10 +25,9 @@ it("exposes the required absolute portfolio paths", () => {
     `${site.home}/now/current.md`,
     `${site.home}/about/me.md`,
     `${site.home}/contact/README.md`,
-    ...site.github.projects.map((project) => {
-      const name = project.kind === "contributions" ? project.name : project.repo;
-      return `${site.home}/projects/${name}.md`;
-    }),
+    `${site.home}/projects/speech-core.md`,
+    `${site.home}/projects/browser-ops.md`,
+    `${site.home}/projects/oh-my-pi.md`,
   ];
 
   for (const path of required) {

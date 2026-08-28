@@ -1,6 +1,7 @@
 origin: https://github.com/atacolak/browser-ops
 language: Python
 updated: 2026-08-21
+blurb: lease a cloak browser, then drive one tab over a unix socket
 
 # browser-ops
 <img width="720" height="288" alt="knight" src="https://github.com/user-attachments/assets/b8ed1001-82c1-47d8-8013-7ea4aaf38911" />

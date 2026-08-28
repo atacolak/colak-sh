@@ -65,6 +65,14 @@ export class SessionController {
     if (this.screen) write(this.screen);
   }
 
+  async mergeFiles(files: Record<string, string>): Promise<void> {
+    const bash = this.shell.bash;
+    if (!bash) return;
+    for (const [path, content] of Object.entries(files)) {
+      await bash.writeFile(path, content);
+    }
+  }
+
   async attach(write: (data: string) => void): Promise<void> {
     this.write = write;
     if (this.attached) {

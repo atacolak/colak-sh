@@ -6,19 +6,11 @@ export type SocialLink = {
   icon: "twitter" | "github";
 };
 
-export type GithubRepoProject = {
-  repo: string;
-  kind?: "repo";
-};
-
-export type GithubContributionsProject = {
-  kind: "contributions";
+export type GithubContributions = {
   name: string;
   upstream: string;
   fork: string;
 };
-
-export type GithubProject = GithubRepoProject | GithubContributionsProject;
 
 export type Site = {
   title: string;
@@ -33,7 +25,8 @@ export type Site = {
   prompts: string[];
   github: {
     user: string;
-    projects: GithubProject[];
+    exclude: string[];
+    contributions: GithubContributions[];
   };
 };
 

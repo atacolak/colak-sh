@@ -1,6 +1,7 @@
 origin: https://github.com/atacolak/voicecat
 language: Python
 updated: 2026-08-27
+blurb: the phone line between speech-core and a headed omp tui
 
 # voicecat
 

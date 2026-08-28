@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import type { PortfolioImage } from "../content/github-readme";
 import { site } from "../site";
+import { isStuckToBottom } from "../terminal/follow-scroll";
 import { breakSentences } from "./break-sentences";
 import { INITIAL_PROMPTS, type ChatMessage, type ChatState } from "./chat-state";
 import { PromptChips } from "./PromptChips";
@@ -13,16 +15,20 @@ const ICONS: Record<string, string> = {
 type ChatPanelProps = {
   state: ChatState;
   onPrompt: (text: string) => void;
+  images?: PortfolioImage[];
 };
 
-export function ChatPanel({ state, onPrompt }: ChatPanelProps) {
+export function ChatPanel({ state, onPrompt, images = [] }: ChatPanelProps) {
   const [draft, setDraft] = useState("");
   const chips = state.suggestions.length > 0 ? state.suggestions : INITIAL_PROMPTS;
   const messages = useTypewriter(state.messages);
   const logRef = useRef<HTMLDivElement>(null);
+  const stickRef = useRef(true);
 
   useEffect(() => {
-    logRef.current?.scrollTo({ top: logRef.current.scrollHeight });
+    const el = logRef.current;
+    if (!el || !stickRef.current) return;
+    el.scrollTop = el.scrollHeight;
   }, [messages]);
 
   function submit(text: string) {
@@ -56,8 +62,30 @@ export function ChatPanel({ state, onPrompt }: ChatPanelProps) {
           ))}
         </nav>
       </div>
+      {images.length > 0 ? (
+        <aside className="chat-stills" aria-label="project stills">
+          {images.map((image) => (
+            <a
+              key={image.src}
+              href={image.src}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <img src={image.src} alt={image.alt || ""} />
+            </a>
+          ))}
+        </aside>
+      ) : null}
       <PromptChips items={chips} disabled={state.active} onSelect={submit} />
-      <div className="chat-log" aria-live="polite" ref={logRef}>
+      <div
+        className="chat-log"
+        aria-live="polite"
+        ref={logRef}
+        onScroll={() => {
+          const el = logRef.current;
+          if (el) stickRef.current = isStuckToBottom(el);
+        }}
+      >
         {messages.filter(visible).map((message, index) => (
           <ChatLine key={`${message.role}-${index}`} message={message} />
         ))}

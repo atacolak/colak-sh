@@ -1,6 +1,7 @@
 origin: https://github.com/atacolak/speech-core
 language: Rust
 updated: 2026-08-27
+blurb: realtime speech substrate. immutable turns
 
 # Speech Core
 

@@ -2,8 +2,8 @@
 
 origin: https://github.com/atacolak/oh-my-pi
 upstream: https://github.com/can1357/oh-my-pi
+blurb: long-lived oh-my-pi fork. contributions, not a checkout
 
-long-lived fork of can1357/oh-my-pi. daily runtime is composed from isolated cap/* branches. this file is the contribution surface, not a checkout of the tree.
 
 open:
 - [#9969](https://github.com/can1357/oh-my-pi/pull/9969) fix(lsp): discover nested project roots lazily
