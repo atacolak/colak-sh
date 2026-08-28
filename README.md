@@ -1,5 +1,7 @@
 # colak.sh
 
+![colak.sh](docs/screenshot.webp)
+
 a terminal-native public portfolio. a visitor and an agent share one browser-local shell. the terminal is the exhibit; chat is the mutter between glances.
 
 live: [colak.sh](https://colak.sh)
