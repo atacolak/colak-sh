@@ -13,6 +13,10 @@ export type Site = {
   openingCommand: string;
   socials: Array<{ label: string; href: string; icon: string }>;
   prompts: string[];
+  github: {
+    user: string;
+    projects: Array<Record<string, string>>;
+  };
 };
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -21,3 +25,4 @@ export const site: Site = JSON.parse(
 ) as Site;
 
 export const homePrefix = `${site.home.replace(/\/+$/, "")}/`;
+export const projectsDir = `${site.home.replace(/\/+$/, "")}/projects`;

@@ -6,6 +6,20 @@ export type SocialLink = {
   icon: "twitter" | "github";
 };
 
+export type GithubRepoProject = {
+  repo: string;
+  kind?: "repo";
+};
+
+export type GithubContributionsProject = {
+  kind: "contributions";
+  name: string;
+  upstream: string;
+  fork: string;
+};
+
+export type GithubProject = GithubRepoProject | GithubContributionsProject;
+
 export type Site = {
   title: string;
   host: string;
@@ -17,6 +31,10 @@ export type Site = {
   openingCommand: string;
   socials: SocialLink[];
   prompts: string[];
+  github: {
+    user: string;
+    projects: GithubProject[];
+  };
 };
 
 export const site: Site = raw as Site;

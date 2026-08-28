@@ -16,5 +16,16 @@
     "show me something impressive",
     "what kind of engineer is ata?",
     "why should i talk to him?"
-  ]
+  ],
+  "github": {
+    "user": "atacolak",
+    "projects": [
+      { "repo": "speech-core" },
+      { "repo": "browser-ops" },
+      { "repo": "systemd-ops" },
+      { "repo": "voicecat" },
+      { "repo": "colak-sh" },
+      { "kind": "contributions", "name": "oh-my-pi", "upstream": "can1357/oh-my-pi", "fork": "atacolak/oh-my-pi" }
+    ]
+  }
 }

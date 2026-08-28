@@ -1,6 +1,6 @@
 # now
 
-late 2026. two live threads.
+late 2026. two live threads, plus the fork that hosts them.
 
 ## speech-core
 
@@ -20,4 +20,4 @@ the interesting claim is ownership: a lease is a mutation capability for exactly
 
 ## also
 
-long-lived fork work on oh-my-pi: keeping upstream main pristine, isolating local capabilities, and composing a daily runtime without mixing personal config into public patches.
+long-lived fork work on oh-my-pi: keeping upstream main pristine, isolating local capabilities, and composing a daily runtime without mixing personal config into public patches. the contribution list lives at `projects/oh-my-pi.md`. the rest of `projects/` is a github catalog as markdown, not a checkout.

@@ -1,6 +1,8 @@
 import { MarkdownRenderer } from "@wterm/markdown";
 import { defineCommand, type Bash, type ResolvedCommandContext } from "just-bash";
+import { extractMarkdownImages, firstParagraph, type PortfolioImage } from "../content/github-readme";
 import { projectsDir } from "../site";
+import { setViewedImages } from "./portfolio-images";
 
 const DIR_COLOR = "\x1b[1;34m";
 const RESET = "\x1b[0m";
@@ -147,6 +149,7 @@ const catCommand = defineCommand("cat", async (args, ctx) => {
   }
 
   const chunks: string[] = [];
+  const images: PortfolioImage[] = [];
   for (const file of files) {
     const resolved = ctx.fs.resolvePath(ctx.cwd, file);
     try {
@@ -159,7 +162,12 @@ const catCommand = defineCommand("cat", async (args, ctx) => {
         };
       }
       const text = await ctx.fs.readFile(resolved);
-      chunks.push(file.endsWith(".md") ? renderMarkdown(text) : text);
+      if (file.endsWith(".md") || resolved.endsWith(".md")) {
+        images.push(...extractMarkdownImages(text));
+        chunks.push(renderMarkdown(text));
+      } else {
+        chunks.push(text);
+      }
     } catch {
       return {
         stdout: "",
@@ -168,6 +176,7 @@ const catCommand = defineCommand("cat", async (args, ctx) => {
       };
     }
   }
+  setViewedImages(images);
   return { stdout: chunks.join(""), stderr: "", exitCode: 0 };
 });
 
@@ -220,7 +229,11 @@ async function listProjects(
     }
     const label = dir ? `${DIR_COLOR}${name}${RESET}` : name;
     const pad = " ".repeat(Math.max(1, width - name.length + 2));
-    const blurb = dir ? await projectBlurb(ctx, child) : "";
+    const blurb = dir
+      ? await projectBlurb(ctx, child)
+      : name.endsWith(".md")
+        ? await fileBlurb(ctx, child)
+        : "";
     rows.push(blurb ? `${label}${pad}${blurb}` : label);
   }
   return rows.join("\n");
@@ -231,16 +244,23 @@ async function projectBlurb(
   dir: string,
 ): Promise<string> {
   try {
-    const readme = await ctx.fs.readFile(ctx.fs.resolvePath(dir, "README.md"));
-    for (const line of readme.split("\n")) {
-      const trimmed = line.trim();
-      if (!trimmed || trimmed.startsWith("#") || trimmed.startsWith("```")) continue;
-      return trimmed.replace(/\.$/, "");
-    }
+    return firstParagraph(
+      await ctx.fs.readFile(ctx.fs.resolvePath(dir, "README.md")),
+    );
   } catch {
-    /* no readme */
+    return "";
   }
-  return "";
+}
+
+async function fileBlurb(
+  ctx: ResolvedCommandContext,
+  path: string,
+): Promise<string> {
+  try {
+    return firstParagraph(await ctx.fs.readFile(path));
+  } catch {
+    return "";
+  }
 }
 
 function renderMarkdown(source: string): string {

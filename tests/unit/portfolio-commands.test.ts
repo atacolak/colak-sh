@@ -6,6 +6,7 @@ import {
   HELP_TEXT,
   registerPortfolioCommands,
 } from "../../src/terminal/portfolio-commands";
+import { getViewedImages } from "../../src/terminal/portfolio-images";
 
 it("bolds directories without a trailing slash", async () => {
   const bash = new Bash({
@@ -95,9 +96,9 @@ it("tells the visitor when cat hits a directory", async () => {
 it("lists projects as stacked one-liners", async () => {
   const bash = new Bash({
     files: {
-      [`${site.home}/projects/speech-core/README.md`]:
+      [`${site.home}/projects/speech-core.md`]:
         "# speech-core\n\nreal-time speech substrate for human-agent interaction.\n",
-      [`${site.home}/projects/browser-ops/README.md`]:
+      [`${site.home}/projects/browser-ops.md`]:
         "# browser-ops\n\nlease a cloak browser, then drive a specific tab over a unix socket.\n",
     },
     cwd: site.home,
@@ -106,8 +107,23 @@ it("lists projects as stacked one-liners", async () => {
   const result = await bash.exec("ls projects");
   const lines = result.stdout.trim().split("\n");
   expect(lines).toHaveLength(2);
-  expect(result.stdout).toContain("speech-core");
+  expect(result.stdout).toContain("speech-core.md");
   expect(result.stdout).toContain("real-time speech substrate");
-  expect(result.stdout).toContain("browser-ops");
+  expect(result.stdout).toContain("browser-ops.md");
   expect(result.stdout).toContain("lease a cloak browser");
+});
+
+it("publishes github images from cat markdown", async () => {
+  const src =
+    "https://github.com/user-attachments/assets/b8ed1001-82c1-47d8-8013-7ea4aaf38911";
+  const bash = new Bash({
+    files: {
+      [`${site.home}/projects/browser-ops.md`]:
+        `# browser-ops\n<img alt="knight" src="${src}" />\n`,
+    },
+    cwd: site.home,
+  });
+  registerPortfolioCommands(bash);
+  await bash.exec("cat projects/browser-ops.md");
+  expect(getViewedImages()).toEqual([{ src, alt: "knight" }]);
 });
