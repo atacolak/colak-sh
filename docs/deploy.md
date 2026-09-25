@@ -10,7 +10,9 @@ LLM_API_KEY=
 
 put the key in a local env file, never in git, never in `VITE_*`. hashed IPs only in the budget file. node 24.
 
-vite inlines the nerd-icon subset as a `data:` font. CSP must allow `font-src 'self' data:` or github/x icons stay tofu and the exhibit cannot paint private-use glyphs. do not load fonts from google; production CSP will block them.
+wterm compiles an inlined wasm module. CSP must include `script-src 'self' 'wasm-unsafe-eval'` or `WebAssembly.instantiate` is refused, init destroys the widget, and the exhibit is wallpaper with no shell.
+
+vite inlines the nerd-icon subset as a `data:` font. CSP must allow `font-src 'self' data:` or github/x icons stay tofu. keep that face on `.chat-social` only — it has two private-use glyphs and must not sit in the terminal stack. do not load fonts from google.
 
 ## docker on services-1
 
