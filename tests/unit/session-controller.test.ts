@@ -6,7 +6,7 @@ function createController() {
   const writes: string[] = [];
   const controller = new SessionController({
     [`${site.home}/README.md`]: "# ata\n",
-    [`${site.home}/now/current.md`]: "# now\n",
+    [`${site.home}/now.md`]: "# now\n",
     [`${site.home}/projects/speech-core.md`]: "# speech-core\n",
   });
   const write = (data: string) => {

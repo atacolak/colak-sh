@@ -1,5 +1,9 @@
 import { expect, it } from "vitest";
-import { filterSuggestions } from "../../server/agent/suggestions";
+import {
+  FALLBACK_SUGGESTIONS,
+  SUGGESTION_COUNT,
+  filterSuggestions,
+} from "../../server/agent/suggestions";
 
 it("keeps specific ata questions and drops generic filler", () => {
   expect(
@@ -21,6 +25,28 @@ it("keeps specific ata questions and drops generic filler", () => {
   ]);
 });
 
-it("returns empty on malformed input", () => {
-  expect(filterSuggestions("nope")).toEqual([]);
+it("always returns three chips, padding from fallbacks", () => {
+  expect(filterSuggestions(["show me speech-core"])).toEqual([
+    "show me speech-core",
+    ...FALLBACK_SUGGESTIONS.filter((item) => item !== "show me speech-core").slice(
+      0,
+      SUGGESTION_COUNT - 1,
+    ),
+  ]);
+  expect(filterSuggestions("nope")).toEqual(FALLBACK_SUGGESTIONS);
+  expect(filterSuggestions([])).toHaveLength(SUGGESTION_COUNT);
+});
+
+it("keeps named live-thread projects", () => {
+  expect(
+    filterSuggestions([
+      "show me actor-village",
+      "what is talker for?",
+      "open mardi-gras",
+    ]),
+  ).toEqual([
+    "show me actor-village",
+    "what is talker for?",
+    "open mardi-gras",
+  ]);
 });

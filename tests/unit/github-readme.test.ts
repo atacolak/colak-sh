@@ -5,6 +5,8 @@ import {
   projectBlurbFromMarkdown,
   rewriteRelativeUrls,
   wrapAnsi,
+  wrapHanging,
+  wrapWidth,
 } from "../../src/content/github-readme";
 
 const blob = "https://github.com/atacolak/browser-ops/blob/main";
@@ -62,6 +64,37 @@ it("does not count osc 8 sequences toward wrap width", () => {
   expect(
     wrapped.split("\n").every((line) => visibleish(line) <= 28),
   ).toBe(true);
+});
+
+it("clamps wrap width to a sane live-column range", () => {
+  expect(wrapWidth(12)).toBe(24);
+  expect(wrapWidth(40)).toBe(40);
+  expect(wrapWidth(120)).toBe(120);
+  expect(wrapWidth(400)).toBe(240);
+  expect(wrapWidth(undefined)).toBe(80);
+});
+
+it("hangs wrapped blurbs under the name instead of truncating", () => {
+  const wrapped = wrapHanging(
+    "speech-core.md",
+    "realtime speech substrate with immutable turns and a separate mouth",
+    40,
+  );
+  expect(wrapped).toContain("immutable");
+  expect(wrapped).toContain("turns");
+  expect(wrapped).toContain("mouth");
+  expect(wrapped).not.toContain("…");
+  expect(wrapped.split("\n").length).toBeGreaterThan(1);
+  expect(
+    wrapped.split("\n").every((line) => visibleish(line) <= 40),
+  ).toBe(true);
+  expect(wrapped.split("\n")[1]?.startsWith("                ")).toBe(true);
+});
+
+it("escapes underscores in x/github handles so markdown cannot eat them", () => {
+  const prepared = prepareMarkdown("github: atacolak\nx: reward_hacker\n");
+  expect(prepared).toContain("reward\\_hacker");
+  expect(prepared).toContain("atacolak");
 });
 
 function visibleish(text: string): number {

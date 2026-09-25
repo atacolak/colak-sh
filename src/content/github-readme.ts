@@ -42,7 +42,24 @@ export function prepareMarkdown(source: string): string {
       osc8(label, url),
     )
     .replace(/^\n+/, "");
-  return autolinkBareUrls(text);
+  return escapeHandleUnderscores(autolinkBareUrls(text));
+}
+
+function escapeHandleUnderscores(text: string): string {
+  return text.replace(
+    /^(github|x):\s+(\S+)\s*$/gm,
+    (_m, key: string, name: string) => `${key}: ${name.replace(/_/g, "\\_")}`,
+  );
+}
+
+export function linkifyHandles(text: string): string {
+  return text
+    .replace(/^(github):\s+([A-Za-z0-9-]+)\s*$/gm, (_m, key: string, name: string) =>
+      `${key}: ${osc8(name, `https://github.com/${name}`)}`,
+    )
+    .replace(/^(x):\s+([A-Za-z0-9_]+)\s*$/gm, (_m, key: string, name: string) =>
+      `${key}: ${osc8(name, `https://x.com/${name}`)}`,
+    );
 }
 
 function autolinkBareUrls(text: string): string {
@@ -90,7 +107,7 @@ export function firstParagraph(markdown: string): string {
   return "";
 }
 
-export function cleanBlurb(text: string, max = 72): string {
+export function cleanBlurb(text: string, max?: number): string {
   const cleaned = text
     .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
     .replace(/<[^>]+>/g, "")
@@ -98,8 +115,35 @@ export function cleanBlurb(text: string, max = 72): string {
     .replace(/\s+/g, " ")
     .trim()
     .replace(/\.$/, "");
-  if (cleaned.length <= max) return cleaned;
+  if (max == null || cleaned.length <= max) return cleaned;
   return `${cleaned.slice(0, Math.max(1, max - 1)).replace(/\s+\S*$/, "")}…`;
+}
+
+export function wrapWidth(columns: number | string | undefined): number {
+  const n = Number.parseInt(String(columns ?? 80), 10);
+  if (!Number.isFinite(n)) return 80;
+  return Math.max(24, Math.min(240, n));
+}
+
+export function wrapHanging(
+  lead: string,
+  rest: string,
+  columns: number,
+  leadWidth = visibleWidth(lead),
+): string {
+  const gap = 2;
+  if (!rest) return wrapAnsi(lead, columns);
+  if (leadWidth + gap + 8 > columns) {
+    return wrapAnsi(`${lead}  ${rest}`, columns);
+  }
+  const indentWidth = leadWidth + gap;
+  const body = wrapAnsi(rest, columns - indentWidth).split("\n");
+  const pad = " ".repeat(gap);
+  const hang = " ".repeat(indentWidth);
+  return [
+    `${lead}${pad}${body[0]}`,
+    ...body.slice(1).map((line) => `${hang}${line}`),
+  ].join("\n");
 }
 
 export function wrapAnsi(text: string, width: number): string {

@@ -1,10 +1,24 @@
 import { MarkdownRenderer } from "@wterm/markdown";
 import { defineCommand, type Bash, type ResolvedCommandContext } from "just-bash";
-import { prepareMarkdown, projectBlurbFromMarkdown, wrapAnsi } from "../content/github-readme";
+import {
+  linkifyHandles,
+  prepareMarkdown,
+  projectBlurbFromMarkdown,
+  wrapAnsi,
+  wrapHanging,
+  wrapWidth,
+} from "../content/github-readme";
 import { projectsDir } from "../site";
 
 const DIR_COLOR = "\x1b[1;34m";
+const HIDDEN_COLOR = "\x1b[2m";
 const RESET = "\x1b[0m";
+
+let wrapColumns = wrapWidth(80);
+
+export function setWrapColumns(columns: number): void {
+  wrapColumns = wrapWidth(columns);
+}
 
 const VISITOR_COMMANDS = [
   ["ls", "list this directory. folders are bold"],
@@ -61,15 +75,21 @@ export async function annotateLsForModel(
   const files: string[] = [];
   for (const name of names.sort((a, b) => a.localeCompare(b))) {
     if (name.startsWith(".")) continue;
+    const child = bash.fs.resolvePath(path, name);
+    let dir = false;
     try {
-      if ((await bash.fs.stat(bash.fs.resolvePath(path, name))).isDirectory) {
-        directories.push(`${name}/`);
-      } else {
-        files.push(name);
-      }
+      dir = (await bash.fs.stat(child)).isDirectory;
     } catch {
-      files.push(name);
+      dir = false;
     }
+    const blurb = dir
+      ? await markdownBlurb(bash, bash.fs.resolvePath(child, "README.md"))
+      : name.endsWith(".md")
+        ? await markdownBlurb(bash, child)
+        : "";
+    const line = blurb ? `${name}${dir ? "/" : ""} — ${blurb}` : `${name}${dir ? "/" : ""}`;
+    if (dir) directories.push(line);
+    else files.push(line);
   }
   const lines = [
     `listing ${path}`,
@@ -77,7 +97,7 @@ export async function annotateLsForModel(
     ...(directories.length > 0 ? directories.map((name) => `  ${name}`) : ["  (none)"]),
     "files:",
     ...(files.length > 0 ? files.map((name) => `  ${name}`) : ["  (none)"]),
-    "cat only files. ls a directory to see inside it.",
+    "cat only files. ls a directory to see inside it. a blurb is enough to name a project; cat the file only if you need more than that.",
   ];
   return lines.join("\n");
 }
@@ -127,7 +147,7 @@ const lsCommand = defineCommand("ls", async (args, ctx) => {
       };
     }
     if (stat.isFile) {
-      blocks.push(target);
+      blocks.push(colorEntry(target, false, onePerLine));
       continue;
     }
     if (!onePerLine && isProjectsDir(resolved)) {
@@ -197,8 +217,15 @@ async function listNames(
     } catch {
       dir = false;
     }
-    labeled.push(dir ? `${DIR_COLOR}${name}${RESET}` : name);
+    labeled.push(colorEntry(name, dir, plain));
   }
+  return labeled;
+}
+
+function colorEntry(name: string, dir: boolean, plain: boolean): string {
+  if (plain) return name;
+  let labeled = dir ? `${DIR_COLOR}${name}${RESET}` : name;
+  if (name.startsWith(".")) labeled = `${HIDDEN_COLOR}${labeled}${RESET}`;
   return labeled;
 }
 
@@ -213,7 +240,8 @@ async function listProjects(
   const names = (await ctx.fs.readdir(path))
     .filter((name) => !name.startsWith("."))
     .sort((a, b) => a.localeCompare(b));
-  const width = Math.max(14, ...names.map((name) => name.length));
+  const columns = wrapColumns;
+  const nameWidth = Math.max(8, ...names.map((name) => name.length));
   const rows: string[] = [];
   for (const name of names) {
     const child = ctx.fs.resolvePath(path, name);
@@ -223,14 +251,14 @@ async function listProjects(
     } catch {
       dir = false;
     }
-    const label = dir ? `${DIR_COLOR}${name}${RESET}` : name;
-    const pad = " ".repeat(Math.max(4, width - name.length + 4));
+    const padded = name.padEnd(nameWidth);
+    const label = dir ? `${DIR_COLOR}${padded}${RESET}` : padded;
     const blurb = dir
       ? await projectBlurb(ctx, child)
       : name.endsWith(".md")
         ? await fileBlurb(ctx, child)
         : "";
-    rows.push(blurb ? `${label}${pad}${blurb}` : label);
+    rows.push(wrapHanging(label, blurb, columns, nameWidth));
   }
   return rows.join("\n");
 }
@@ -252,6 +280,13 @@ async function fileBlurb(
   ctx: ResolvedCommandContext,
   path: string,
 ): Promise<string> {
+  return markdownBlurb(ctx, path);
+}
+
+async function markdownBlurb(
+  ctx: { fs: { readFile: (path: string) => Promise<string> } },
+  path: string,
+): Promise<string> {
   try {
     return projectBlurbFromMarkdown(await ctx.fs.readFile(path));
   } catch {
@@ -260,7 +295,10 @@ async function fileBlurb(
 }
 
 function renderMarkdown(source: string): string {
-  const renderer = new MarkdownRenderer({ width: 80 });
+  const renderer = new MarkdownRenderer({ width: wrapColumns });
   const rendered = `${renderer.push(source)}${renderer.flush()}`;
-  return wrapAnsi(rendered.replace(/\r\n/g, "\n"), 80);
+  return wrapAnsi(
+    linkifyHandles(rendered.replace(/\r\n/g, "\n")),
+    wrapColumns,
+  );
 }

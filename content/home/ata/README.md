@@ -1,14 +1,21 @@
 # ata colak
 
-engineer who likes systems you can inspect, interrupt, and prove.
+hi.
+i build systems you can inspect, interrupt, and prove.
+if you landed here, you're welcome to walk around.
 
-this is a curated public filesystem, not a live workstation. walk around:
+this is a curated public filesystem, not a live workstation:
 
 ```text
-about/      who i am and how i work
-now/        what i am building lately
-projects/   pamphlets. origin links go to github
-contact/    how to reach me
+now.md      live thread
+me.md       who i am
+projects/   pamphlets
+contact.md  how to reach me
 ```
 
-try `ls`, `cd`, `cat`. if you would rather ask than type, use the sidebar.
+start in now.md.
+actor village is the current system.
+then speech-core and talker.
+
+try `ls`, `cd`, `cat`.
+if you'd rather ask than type, the sidebar is right there.

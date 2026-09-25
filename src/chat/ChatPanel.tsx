@@ -22,12 +22,13 @@ export function ChatPanel({ state, onPrompt }: ChatPanelProps) {
   const messages = useTypewriter(state.messages);
   const logRef = useRef<HTMLDivElement>(null);
   const stickRef = useRef(true);
+  const waiting = isWaiting(state);
 
   useEffect(() => {
     const el = logRef.current;
     if (!el || !stickRef.current) return;
     el.scrollTop = el.scrollHeight;
-  }, [messages]);
+  }, [messages, waiting]);
 
   function submit(text: string) {
     const trimmed = text.trim();
@@ -73,6 +74,13 @@ export function ChatPanel({ state, onPrompt }: ChatPanelProps) {
         {messages.filter(visible).map((message, index) => (
           <ChatLine key={`${message.role}-${index}`} message={message} />
         ))}
+        {waiting ? (
+          <p className="chat-wait" aria-label="waiting">
+            <span>.</span>
+            <span>.</span>
+            <span>.</span>
+          </p>
+        ) : null}
       </div>
       <form className="chat-form" onSubmit={onSubmit}>
         <input
@@ -91,6 +99,14 @@ export function ChatPanel({ state, onPrompt }: ChatPanelProps) {
 function visible(message: ChatMessage): boolean {
   if (message.role === "tool") return true;
   return message.text.length > 0;
+}
+
+function isWaiting(state: ChatState): boolean {
+  if (!state.active) return false;
+  const last = state.messages.at(-1);
+  if (!last) return true;
+  if (last.role === "assistant") return last.text.length === 0;
+  return true;
 }
 
 function ChatLine({ message }: { message: ChatMessage }) {

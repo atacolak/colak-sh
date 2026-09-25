@@ -15,11 +15,18 @@ export function mapContentModules(
 }
 
 export function loadPortfolioFiles(): Record<string, string> {
-  const modules = import.meta.glob("/content/**/*.{md,txt,json}", {
-    eager: true,
-    query: "?raw",
-    import: "default",
-  }) as Record<string, string>;
+  const modules = {
+    ...import.meta.glob("/content/**/*.{md,txt,json}", {
+      eager: true,
+      query: "?raw",
+      import: "default",
+    }),
+    ...import.meta.glob("/content/**/.*.md", {
+      eager: true,
+      query: "?raw",
+      import: "default",
+    }),
+  } as Record<string, string>;
 
   return mapContentModules(modules);
 }
