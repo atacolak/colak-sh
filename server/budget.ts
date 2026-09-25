@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rename, unlink, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import {
   IP_RATE_WINDOW_MS,
@@ -156,13 +156,42 @@ export class UsageBudget {
 
   private persist(): void {
     const snapshot = structuredClone(this.state);
-    this.writing = this.writing.then(async () => {
-      await mkdir(dirname(this.path), { recursive: true });
-      const tmp = `${this.path}.${process.pid}.tmp`;
-      await writeFile(tmp, JSON.stringify(snapshot));
-      await rename(tmp, this.path);
-    });
+    this.writing = this.writing
+      .then(() => this.writeSnapshot(snapshot))
+      .catch((error) => {
+        console.error(
+          JSON.stringify({
+            event: "budget_persist_failed",
+            error: error instanceof Error ? error.message : String(error),
+          }),
+        );
+      });
   }
+
+  private async writeSnapshot(snapshot: BudgetState): Promise<void> {
+    await mkdir(dirname(this.path), { recursive: true });
+    const payload = JSON.stringify(snapshot);
+    const tmp = `${this.path}.${process.pid}.tmp`;
+    try {
+      await writeFile(tmp, payload);
+      await rename(tmp, this.path);
+    } catch (error) {
+      await unlink(tmp).catch(() => undefined);
+      const code = errorCode(error);
+      if (code === "EBUSY" || code === "EXDEV") {
+        await writeFile(this.path, payload);
+        return;
+      }
+      throw error;
+    }
+  }
+}
+
+function errorCode(error: unknown): string {
+  if (error && typeof error === "object" && "code" in error) {
+    return String((error as { code: unknown }).code);
+  }
+  return "";
 }
 
 export function countedTokens(usage: UsageLike | undefined): number {

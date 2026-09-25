@@ -1,4 +1,4 @@
-import { mkdtemp, readFile } from "node:fs/promises";
+import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { expect, it } from "vitest";
@@ -104,4 +104,18 @@ it("caps concurrent model requests", async () => {
 
 it("keeps the global daily prompt ceiling", () => {
   expect(MAX_GLOBAL_PROMPTS_PER_DAY).toBe(1500);
+});
+
+it("does not reject flush when persist cannot write", async () => {
+  const now = { ms: Date.parse("2026-08-27T00:00:00Z") };
+  const dir = await mkdtemp(join(tmpdir(), "colak-budget-"));
+  const blocker = join(dir, "not-a-dir");
+  await writeFile(blocker, "nope");
+  const budget = await UsageBudget.load(
+    join(blocker, "usage-budget.json"),
+    "salt",
+    () => now.ms,
+  );
+  expect(budget.admit("1.1.1.1").ok).toBe(true);
+  await expect(budget.flush()).resolves.toBeUndefined();
 });

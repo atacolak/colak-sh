@@ -9,3 +9,21 @@ LLM_API_KEY=
 ```
 
 put the key in a local env file, never in git, never in `VITE_*`. hashed IPs only in the budget file. node 24.
+
+## docker on services-1
+
+`BUDGET_PATH` must be a file inside a mounted **directory**. do not bind-mount the json file itself. persist writes a sibling tmp and `rename`s onto the dest; docker returns `EBUSY` on a file mount, and an unhandled persist used to crash node and drop `/ws`.
+
+from the `colak-sh` container, talk to the bouncer on the docker network:
+
+```text
+LLM_BASE_URL=http://cpa-bouncer:8317/v1
+```
+
+`https://proxy.net.colak.sh` from that container fails TLS. the public site key is not the bouncer key; put the bouncer key in `runtime.env`.
+
+```yaml
+volumes:
+  - ./src:/app:ro
+  - ./data:/data
+```
