@@ -10,6 +10,8 @@ LLM_API_KEY=
 
 put the key in a local env file, never in git, never in `VITE_*`. hashed IPs only in the budget file. node 24.
 
+vite inlines the nerd-icon subset as a `data:` font. CSP must allow `font-src 'self' data:` or github/x icons stay tofu and the exhibit cannot paint private-use glyphs. do not load fonts from google; production CSP will block them.
+
 ## docker on services-1
 
 `BUDGET_PATH` must be a file inside a mounted **directory**. do not bind-mount the json file itself. persist writes a sibling tmp and `rename`s onto the dest; docker returns `EBUSY` on a file mount, and an unhandled persist used to crash node and drop `/ws`.
