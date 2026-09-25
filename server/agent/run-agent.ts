@@ -182,7 +182,7 @@ async function suggestNext(
     });
     return filterSuggestions(JSON.parse(result.text) as unknown);
   } catch {
-    return [];
+    return filterSuggestions([]);
   }
 }
 
