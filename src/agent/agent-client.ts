@@ -34,7 +34,7 @@ export class AgentClient {
     this.requestActive = true;
     this.setState({
       messages: [...this.state.messages, { role: "visitor", text }],
-      suggestions: [],
+      suggestions: this.state.suggestions,
       active: true,
     });
     this.send({ type: "prompt", requestId, text });

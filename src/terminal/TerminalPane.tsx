@@ -30,9 +30,17 @@ export function TerminalPane({ onController }: TerminalPaneProps) {
       controllerRef.current.setWrite(sink);
     }
     void (attachRef.current ?? Promise.resolve(controllerRef.current)).then(
-      onController,
+      (controller) => {
+        onController(controller);
+        window.setTimeout(() => {
+          if (controllerRef.current !== controller) return;
+          const cols = ref.current?.instance?.cols;
+          if (cols) controller.setColumns(cols);
+          else void controller.bootOpening();
+        }, 80);
+      },
     );
-  }, [onController, sink]);
+  }, [onController, sink, ref]);
 
   const handleData = useCallback((data: string) => {
     void controllerRef.current?.handleHumanInput(data);
@@ -40,6 +48,7 @@ export function TerminalPane({ onController }: TerminalPaneProps) {
 
   const handleResize = useCallback((cols: number) => {
     setWrapColumns(cols);
+    controllerRef.current?.setColumns(cols);
   }, []);
 
   const handleClick = useCallback(

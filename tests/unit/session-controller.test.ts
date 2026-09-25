@@ -23,6 +23,7 @@ function createController() {
 it("opens with cat README.md already executed", async () => {
   const { joinedWrites, write, controller } = createController();
   await controller.attach(write);
+  await controller.bootOpening();
   expect(joinedWrites()).toContain("cat README.md");
   expect(joinedWrites()).toContain("ata");
 
@@ -34,6 +35,7 @@ it("opens with cat README.md already executed", async () => {
 it("shares cwd and history between human and agent input", async () => {
   const { controller, joinedWrites, write } = createController();
   await controller.attach(write);
+  await controller.bootOpening();
 
   await controller.handleHumanInput(`cd ${site.home}/projects`);
   await controller.handleHumanInput("\r");
@@ -50,6 +52,7 @@ it("shares cwd and history between human and agent input", async () => {
 it("rejects empty and oversized agent commands", async () => {
   const { controller } = createController();
   await controller.attach(() => {});
+  await controller.bootOpening();
 
   await expect(controller.execAsAgent("", 0)).rejects.toThrow();
   await expect(controller.execAsAgent("a".repeat(501), 0)).rejects.toThrow();

@@ -42,6 +42,10 @@ it("caps daily prompts per IP", async () => {
   expect(budget.admit("1.1.1.1")).toEqual({ ok: false, reason: "budget" });
 });
 
+it("keeps the per-IP daily token ceiling", () => {
+  expect(MAX_MODEL_TOKENS_PER_IP_PER_DAY).toBe(500_000);
+});
+
 it("caps per-IP and global tokens", async () => {
   const now = { ms: Date.parse("2026-08-27T00:00:00Z") };
   const budget = await makeBudget(now);

@@ -23,7 +23,8 @@ test("renders a terminal-first portfolio and accepts shell input", async ({
 
   await page.keyboard.type("ls");
   await page.keyboard.press("Enter");
-  await expect(terminal).toContainText("about");
-  await expect(terminal).toContainText("now");
+  await expect(terminal).toContainText("me.md");
+  await expect(terminal).toContainText("now.md");
+  await expect(terminal).toContainText("contact.md");
   await expect(terminal).toContainText("projects");
 });

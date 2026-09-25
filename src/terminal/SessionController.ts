@@ -2,7 +2,11 @@ import { BashShell } from "@wterm/just-bash";
 import { wrapLineEditing } from "./line-edit";
 import { OutputCapture } from "./OutputCapture";
 import { normalizeTerminalCapture } from "./normalize-output";
-import { annotateLsForModel, registerPortfolioCommands } from "./portfolio-commands";
+import {
+  annotateLsForModel,
+  registerPortfolioCommands,
+  setWrapColumns,
+} from "./portfolio-commands";
 import { site } from "../site";
 
 export type TerminalExecResult = {
@@ -36,6 +40,9 @@ export class SessionController {
   private write: ((data: string) => void) | null = null;
   private attached = false;
   private screen = "";
+  private booted = false;
+  private boot: Promise<void> | undefined;
+  private bootTimer: ReturnType<typeof setTimeout> | undefined;
 
   constructor(files: Record<string, string>) {
     this.shell = new BashShell({
@@ -79,10 +86,37 @@ export class SessionController {
     });
     if (this.shell.bash) registerPortfolioCommands(this.shell.bash);
     wrapLineEditing(this.shell);
-    for (const ch of site.openingCommand) {
-      await this.shell.handleInput(ch);
-    }
-    await this.shell.handleInput("\r");
+    this.scheduleBoot();
+  }
+
+  setColumns(columns: number): void {
+    setWrapColumns(columns);
+    this.scheduleBoot();
+  }
+
+  async bootOpening(): Promise<void> {
+    clearTimeout(this.bootTimer);
+    this.bootTimer = undefined;
+    if (!this.attached) return;
+    if (this.booted) return this.boot ?? Promise.resolve();
+    this.booted = true;
+    this.boot = (async () => {
+      for (const ch of site.openingCommand) {
+        await this.shell.handleInput(ch);
+      }
+      await this.shell.handleInput("\r");
+      await this.shell.handleInput("\r");
+    })();
+    return this.boot;
+  }
+
+  private scheduleBoot(): void {
+    if (!this.attached || this.booted) return;
+    clearTimeout(this.bootTimer);
+    this.bootTimer = setTimeout(() => {
+      this.bootTimer = undefined;
+      void this.bootOpening();
+    }, 50);
   }
 
   async handleHumanInput(data: string): Promise<void> {
