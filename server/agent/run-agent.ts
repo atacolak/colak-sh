@@ -2,7 +2,7 @@ import { generateText, stepCountIs, streamText, tool } from "ai";
 import { z } from "zod";
 import { countedTokens, type UsageLike } from "../budget.js";
 import { assertAgentCommand } from "../command-policy.js";
-import type { AppConfig } from "../config.js";
+import { modelChain, type AppConfig } from "../config.js";
 import {
   MAX_AGENT_STEPS,
   MAX_OUTPUT_TOKENS_PER_MODEL_STEP,
@@ -33,7 +33,41 @@ export async function runAgent(options: {
   requestId: string;
   config: AppConfig;
 }): Promise<AgentRunResult> {
-  const model = createPortfolioModel(options.config);
+  const chain = modelChain(options.config);
+  let lastError: unknown;
+  for (let i = 0; i < chain.length; i++) {
+    try {
+      return await runAgentOnce(options, chain[i]!);
+    } catch (error) {
+      lastError = error;
+      const next = chain[i + 1];
+      if (!next) break;
+      console.warn(
+        JSON.stringify({
+          event: "model_fallback",
+          requestId: options.requestId,
+          from: chain[i],
+          to: next,
+          message: error instanceof Error ? error.message : "prompt failed",
+        }),
+      );
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error("prompt failed");
+}
+
+async function runAgentOnce(
+  options: {
+    prompt: string;
+    history: HistoryTurn[];
+    exec: (command: string) => Promise<TerminalResultMessage>;
+    send: (message: ServerMessage) => void;
+    requestId: string;
+    config: AppConfig;
+  },
+  modelId: string,
+): Promise<AgentRunResult> {
+  const model = createPortfolioModel(options.config, modelId);
   let terminalCalls = 0;
   let missingUsage = false;
   let spoken = "";
@@ -178,7 +212,7 @@ async function suggestNext(
     const result = await generateText({
       model,
       maxOutputTokens: MAX_SUGGESTION_OUTPUT_TOKENS,
-      prompt: `visitor asked: ${prompt}\nyou answered: ${answer}\nreturn JSON array of 0-3 next questions about ata or a named project (speech-core, browser-ops, systemd-ops, voicecat, colak-sh, oh-my-pi). lowercase. no markdown. no generic filler. no questions about distributed systems, cap theorem, or topics not in the filesystem.`,
+      prompt: `visitor asked: ${prompt}\nyou answered: ${answer}\nreturn JSON array of 0-3 next questions about ata or a named project (actor-village, speech-core, talker, mardi-gras, systemd-ops, browser-ops, voicecat, colak-sh, oh-my-pi). lowercase. no markdown. no generic filler. no questions about distributed systems, cap theorem, or topics not in the filesystem.`,
     });
     return filterSuggestions(JSON.parse(result.text) as unknown);
   } catch {

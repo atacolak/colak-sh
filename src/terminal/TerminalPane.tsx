@@ -3,6 +3,7 @@ import { Terminal, useTerminal } from "@wterm/react";
 import "@wterm/react/css";
 import { loadPortfolioFiles } from "../content/portfolio-files";
 import { followWrite } from "./follow-scroll";
+import { setWrapColumns } from "./portfolio-commands";
 import { SessionController } from "./SessionController";
 
 type TerminalPaneProps = {
@@ -37,6 +38,10 @@ export function TerminalPane({ onController }: TerminalPaneProps) {
     void controllerRef.current?.handleHumanInput(data);
   }, []);
 
+  const handleResize = useCallback((cols: number) => {
+    setWrapColumns(cols);
+  }, []);
+
   const handleClick = useCallback(
     (event: MouseEvent<HTMLElement>) => {
       const target = event.target;
@@ -60,6 +65,7 @@ export function TerminalPane({ onController }: TerminalPaneProps) {
         ref={ref}
         autoResize
         onReady={handleReady}
+        onResize={handleResize}
         onData={handleData}
       />
     </section>

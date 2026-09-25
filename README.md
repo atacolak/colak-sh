@@ -12,7 +12,7 @@ live: [colak.sh](https://colak.sh)
 - human and agent share one `BashShell`. both go through `handleInput()`. do not `bash.exec()` as the agent path — that is a second cwd/history.
 - the agent has one tool: `terminal_exec`. the browser runs it. the server only rendezvouses.
 - model credentials stay on the server. never `VITE_*`.
-- identity, origin, prompts, and socials live in `site.json`. wallpaper is `src/assets/wallpaper.jpg`. swap those, not the code.
+- identity, origin, prompts, and socials live in `site.json`. wallpaper is `src/assets/wallpaper.jpg`. favicon is `public/favicon.png`. swap those, not the code.
 - `projects/` is curated pamphlets, not github dumps. origin links go to the repo. `oh-my-pi.md` is contributions, not a checkout.
 
 ## make it yours

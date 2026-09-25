@@ -26,7 +26,8 @@ const config: AppConfig = {
   distDir: "dist",
   llmBaseUrl: "http://127.0.0.1:8317/v1",
   llmApiKey: "test",
-  llmModel: "gemini-3.1-flash-lite(minimal)",
+  llmModel: "gemini-3.8-flash-high(minimal)",
+  llmFallbacks: ["gemini-3.7-flash-high", "gemini-3.1-flash-lite"],
   budgetPath: "/tmp/budget.json",
   budgetSalt: "salt",
 };
@@ -88,6 +89,53 @@ it("sends terminal_exec, continues, answers, then suggests", async () => {
   expect(result.tokens).toBe(30);
   expect(result.missingUsage).toBe(false);
   expect(result.answer).toBe("peeking at now. speech-core is the live thread. ");
+});
+
+it("falls back to the next model when the primary stream fails", async () => {
+  streamText.mockReset();
+  streamText
+    .mockRejectedValueOnce(new Error("upstream down"))
+    .mockImplementation(
+      (opts: {
+        tools: {
+          terminal_exec: {
+            execute: (input: { command: string }) => Promise<unknown>;
+          };
+        };
+      }) => {
+        const toolResult = opts.tools.terminal_exec.execute({ command: "ls" });
+        return {
+          fullStream: (async function* () {
+            yield { type: "text-delta", text: "actor village is the live system. " };
+            yield { type: "tool-call", toolName: "terminal_exec" };
+            await toolResult;
+          })(),
+          text: Promise.resolve("actor village is the live system."),
+          totalUsage: Promise.resolve({
+            inputTokens: 5,
+            outputTokens: 5,
+            totalTokens: 10,
+          }),
+        };
+      },
+    );
+  generateText.mockResolvedValue({ text: "[]" });
+  const result = await runAgent({
+    prompt: "what is ata working on lately?",
+    history: [],
+    exec: async (command) => ({
+      type: "terminal_result" as const,
+      callId: "c-fb",
+      command,
+      output: "now",
+      cwd: "/home/ata",
+    }),
+    send: () => {},
+    requestId: "req-fb",
+    config,
+  });
+  expect(streamText.mock.calls.length).toBeGreaterThan(1);
+  expect(result.answer).toContain("actor village is the live system.");
 });
 
 it("returns an error payload instead of throwing on a bad command", async () => {

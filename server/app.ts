@@ -1,6 +1,8 @@
+import { access } from "node:fs/promises";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
+import { join } from "node:path";
 import { WebSocketServer, type WebSocket } from "ws";
-import type { AppConfig } from "./config.js";
+import { resolveDistDir, type AppConfig } from "./config.js";
 import { applySecurityHeaders } from "./headers.js";
 import { clientIp, originAllowed } from "./identity.js";
 import { MAX_WS_FRAME_BYTES } from "./limits.js";
@@ -50,13 +52,23 @@ async function handleHttp(
   res: ServerResponse,
   config: AppConfig,
 ): Promise<void> {
+  const distRoot = resolveDistDir(config.distDir);
   if (req.url?.startsWith("/healthz")) {
-    res.writeHead(
-      200,
-      applySecurityHeaders({ "content-type": "application/json" }),
-    );
-    res.end(JSON.stringify({ ok: true }));
+    try {
+      await access(join(distRoot, "index.html"));
+      res.writeHead(
+        200,
+        applySecurityHeaders({ "content-type": "application/json" }),
+      );
+      res.end(JSON.stringify({ ok: true }));
+    } catch {
+      res.writeHead(
+        503,
+        applySecurityHeaders({ "content-type": "application/json" }),
+      );
+      res.end(JSON.stringify({ ok: false, error: "exhibit missing" }));
+    }
     return;
   }
-  await serveStatic(req, res, config.distDir);
+  await serveStatic(req, res, distRoot);
 }

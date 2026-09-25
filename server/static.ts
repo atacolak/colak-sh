@@ -2,6 +2,7 @@ import { createReadStream } from "node:fs";
 import { access, stat } from "node:fs/promises";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { extname, join, relative, resolve, sep } from "node:path";
+import { resolveDistDir } from "./config.js";
 import { applySecurityHeaders } from "./headers.js";
 
 const TYPES: Record<string, string> = {
@@ -28,7 +29,7 @@ export async function serveStatic(
     res.end("bad path");
     return;
   }
-  const root = resolve(distDir);
+  const root = resolveDistDir(distDir);
   const candidate = safeJoin(root, requested === "/" ? "/index.html" : requested);
   if (!candidate) {
     res.writeHead(400, applySecurityHeaders({ "content-type": "text/plain" }));

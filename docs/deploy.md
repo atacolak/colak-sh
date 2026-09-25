@@ -3,10 +3,13 @@
 serve the built client and websocket from one origin. keep the model backend private.
 
 ```text
-LLM_BASE_URL=http://127.0.0.1:8317/v1
-LLM_MODEL=gemini-3.1-flash-lite(minimal)
+LLM_BASE_URL=http://cpa-bouncer:8317/v1
+LLM_MODEL=gemini-3.8-flash-high(minimal)
+LLM_FALLBACK_MODELS=gemini-3.7-flash-high,gemini-3.1-flash-lite
 LLM_API_KEY=
 ```
+
+farm ids that actually exist: `gemini-3.8-flash-high`, `gemini-3.7-flash-high`, `gemini-3.1-flash-lite`. the `(minimal)` suffix turns thinking off. the node loop walks `LLM_FALLBACK_MODELS` when the primary stream fails. `scripts/flash-lite-gate.mjs` is the local 8318 lock for a host-side key; production on services-1 talks to `cpa-bouncer` instead. do not start local `colak-sh-gate` unless asked.
 
 put the key in a local env file, never in git, never in `VITE_*`. hashed IPs only in the budget file. node 24.
 
