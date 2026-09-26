@@ -2,7 +2,7 @@
 import http from "node:http";
 import https from "node:https";
 
-const PORTFOLIO_MODEL = /^gemini-3\.(?:8-flash(?:-high)?|7-flash(?:-high)?|5-flash-lite|1-flash-lite)(?:\([^)]+\))?$/;
+const PORTFOLIO_MODEL = /^gemini-3\.(?:8-flash(?:-high)?|7-flash(?:-high)?|1-flash-lite)(?:\([^)]+\))?$/;
 const LISTEN_HOST = process.env.GATE_LISTEN_HOST ?? "127.0.0.1";
 const LISTEN_PORT = Number(process.env.GATE_LISTEN_PORT ?? 8318);
 const UPSTREAM = new URL(process.env.GATE_UPSTREAM ?? "https://proxy.net.colak.sh");

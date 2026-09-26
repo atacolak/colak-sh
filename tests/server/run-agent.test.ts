@@ -26,8 +26,8 @@ const config: AppConfig = {
   distDir: "dist",
   llmBaseUrl: "http://127.0.0.1:8317/v1",
   llmApiKey: "test",
-  llmModel: "gemini-3.5-flash-lite(minimal)",
-  llmFallbacks: ["gemini-3.1-flash-lite"],
+  llmModel: "gemini-3.8-flash-high(minimal)",
+  llmFallbacks: ["gemini-3.7-flash-high", "gemini-3.1-flash-lite"],
   budgetPath: "/tmp/budget.json",
   budgetSalt: "salt",
 };
