@@ -1,8 +1,9 @@
-import { useCallback, useRef, type MouseEvent } from "react";
+import { useCallback, useEffect, useRef, type MouseEvent } from "react";
 import { Terminal, useTerminal } from "@wterm/react";
 import "@wterm/react/css";
 import { loadPortfolioFiles } from "../content/portfolio-files";
 import { followWrite } from "./follow-scroll";
+import { preserveTerminalScroll } from "./preserve-scroll";
 import { setWrapColumns } from "./portfolio-commands";
 import { SessionController } from "./SessionController";
 
@@ -14,6 +15,15 @@ export function TerminalPane({ onController }: TerminalPaneProps) {
   const { ref, write, focus } = useTerminal();
   const controllerRef = useRef<SessionController | null>(null);
   const attachRef = useRef<Promise<SessionController> | null>(null);
+  const stopPreserve = useRef<(() => void) | null>(null);
+
+  useEffect(
+    () => () => {
+      stopPreserve.current?.();
+      stopPreserve.current = null;
+    },
+    [],
+  );
   const sink = useCallback(
     (data: string) => {
       followWrite(write, () => ref.current?.instance?.element)(data);
@@ -28,6 +38,11 @@ export function TerminalPane({ onController }: TerminalPaneProps) {
       attachRef.current = controller.attach(sink).then(() => controller);
     } else {
       controllerRef.current.setWrite(sink);
+    }
+    const term = ref.current?.instance?.element;
+    if (term) {
+      stopPreserve.current?.();
+      stopPreserve.current = preserveTerminalScroll(term);
     }
     void (attachRef.current ?? Promise.resolve(controllerRef.current)).then(
       (controller) => {
