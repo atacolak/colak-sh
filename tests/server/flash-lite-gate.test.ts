@@ -28,8 +28,14 @@ it("rejects non-portfolio chat models and allows the flash chain", () => {
   ).toBeUndefined();
   expect(
     rejectedModel("POST", "/v1/chat/completions", {
+      model: "gemini-3.5-flash-lite(minimal)",
+    }),
+  ).toBeUndefined();
+  expect(
+    rejectedModel("POST", "/v1/chat/completions", {
       model: "gemini-3.1-flash-lite(minimal)",
     }),
   ).toBeUndefined();
+  expect(isPortfolioModel("gemini-3.5-flash-lite-preview")).toBe(false);
   expect(isPortfolioModel("gemini-3.1-flash-lite-preview")).toBe(false);
 });
