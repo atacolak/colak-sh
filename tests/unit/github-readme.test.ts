@@ -1,5 +1,6 @@
 import { expect, it } from "vitest";
 import {
+  linkifyHandles,
   osc8,
   prepareMarkdown,
   projectBlurbFromMarkdown,
@@ -91,10 +92,13 @@ it("hangs wrapped blurbs under the name instead of truncating", () => {
   expect(wrapped.split("\n")[1]?.startsWith("                ")).toBe(true);
 });
 
-it("escapes underscores in x/github handles so markdown cannot eat them", () => {
+it("keeps underscores in x handles so they can be linked", () => {
   const prepared = prepareMarkdown("github: atacolak\nx: reward_hacker\n");
-  expect(prepared).toContain("reward\\_hacker");
-  expect(prepared).toContain("atacolak");
+  expect(prepared).toContain("x: reward_hacker");
+  expect(prepared).not.toContain("\\_");
+  expect(linkifyHandles(prepared)).toContain(
+    osc8("reward_hacker", "https://x.com/reward_hacker"),
+  );
 });
 
 function visibleish(text: string): number {

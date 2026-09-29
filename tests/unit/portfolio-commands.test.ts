@@ -182,6 +182,24 @@ it("wraps project blurbs to the live width instead of truncating them", async ()
   }
 });
 
+it("turns github and x handles into osc 8 links", async () => {
+  const bash = new Bash({
+    files: {
+      [`${site.home}/me.md`]: "# me\n\ngithub: atacolak\nx: reward_hacker\n",
+    },
+    cwd: site.home,
+  });
+  registerPortfolioCommands(bash);
+  const result = await bash.exec("cat me.md");
+  expect(result.stdout).toContain(
+    osc8("atacolak", "https://github.com/atacolak"),
+  );
+  expect(result.stdout).toContain(
+    osc8("reward_hacker", "https://x.com/reward_hacker"),
+  );
+  expect(result.stdout).not.toContain("\\_");
+});
+
 it("strips figures and blurb metadata from cat markdown", async () => {
   const src =
     "https://github.com/user-attachments/assets/b8ed1001-82c1-47d8-8013-7ea4aaf38911";

@@ -42,14 +42,7 @@ export function prepareMarkdown(source: string): string {
       osc8(label, url),
     )
     .replace(/^\n+/, "");
-  return escapeHandleUnderscores(autolinkBareUrls(text));
-}
-
-function escapeHandleUnderscores(text: string): string {
-  return text.replace(
-    /^(github|x):\s+(\S+)\s*$/gm,
-    (_m, key: string, name: string) => `${key}: ${name.replace(/_/g, "\\_")}`,
-  );
+  return autolinkBareUrls(text);
 }
 
 export function linkifyHandles(text: string): string {
