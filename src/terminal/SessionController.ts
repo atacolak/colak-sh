@@ -105,7 +105,6 @@ export class SessionController {
         await this.shell.handleInput(ch);
       }
       await this.shell.handleInput("\r");
-      await this.shell.handleInput("\r");
     })();
     return this.boot;
   }

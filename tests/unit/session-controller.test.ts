@@ -26,6 +26,8 @@ it("opens with cat README.md already executed", async () => {
   await controller.bootOpening();
   expect(joinedWrites()).toContain("cat README.md");
   expect(joinedWrites()).toContain("ata");
+  const promptHits = joinedWrites().split(`${site.user}@${site.promptHost}`).length - 1;
+  expect(promptHits).toBe(2);
 
   const remount: string[] = [];
   controller.setWrite((data) => remount.push(data));
